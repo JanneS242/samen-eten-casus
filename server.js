@@ -68,7 +68,7 @@ app.post("/api/studenthome", (req, res) => {
   })
 
   //Details from studenthome with given homeId
-  app.get("/api/studenthome", (req, res) => {
+  app.get("/api/studenthome/:homeId", (req, res) => {
     console.log(req.params);
     const { homeId } = req.params;
     var post;
