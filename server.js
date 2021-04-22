@@ -36,36 +36,36 @@ app.post("/api/studenthome", (req, res) => {
         res.status(400).send("Error: Studenthome is not added");
   })
 
-//   //Search studenthome with name and/or city
-//   app.get("/api/studenthome", (req, res) => {
-//     console.log(req.query);
-//     const { city } = req.query;
-//     const { name } = req.query;
-//     console.log(city);
-//     console.log(name);
-//     var post;
-//     var post2;
-//     if (name) {
-//         post = importStudentHomeData.filter((post) => post.name.startsWith(name));
-//     }
-//     console.log(post);
-//     if (city) {
-//         if (post != null) {
-//             post2 = post.filter((post2) => post2.city == city);
-//         } else {
-//             post2 = importStudentHomeData.filter((post2) => post2.city == city);
-//         }
-//     }
-//     if (post2 != null) {
-//         res.status(200).send(post2);
-//     } else {
-//         if (post != null) {
-//             res.status(200).send(post);
-//         } else {
-//             res.status(404).send("Not Found");
-//         }
-//     }
-//   })
+  //Search studenthome with name and/or city
+  app.get("/api/studenthome", (req, res) => {
+    console.log(req.query);
+    const { city } = req.query;
+    const { name } = req.query;
+    console.log(city);
+    console.log(name);
+    var post;
+    var post2;
+    if (name) {
+        post = importStudentHomeData.filter((post) => post.name.startsWith(name));
+    }
+    console.log(post);
+    if (city) {
+        if (post != null) {
+            post2 = post.filter((post2) => post2.city == city);
+        } else {
+            post2 = importStudentHomeData.filter((post2) => post2.city == city);
+        }
+    }
+    if (post2 != null) {
+        res.status(200).send(post2);
+    } else {
+        if (post != null) {
+            res.status(200).send(post);
+        } else {
+            res.status(404).send("Not Found");
+        }
+    }
+  })
 
 //   //Details from studenthome with given homeId
 //   app.get("/api/studenthome", (req, res) => {
