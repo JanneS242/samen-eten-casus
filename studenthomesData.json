@@ -1,6 +1,6 @@
 [
     {
-        "homeId": 1,
+        "homeid": 1,
         "name": "Xior",
         "street": "Tramsingel",
         "number": 27,
@@ -9,7 +9,7 @@
         "phonenumber": "0800 600 0180"
     },
     {
-        "homeId": 2,
+        "homeid": 2,
         "name": "T63",
         "street": "Academiesingel",
         "number": 40,
@@ -18,7 +18,7 @@
         "phonenumber": "076 522 0565"
     },
     {
-        "homeId": 3,
+        "homeid": 3,
         "name": "Herendispuut Dagobert",
         "street": "Delpratsingel",
         "number": 11,
