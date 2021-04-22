@@ -1,0 +1,29 @@
+[
+    {
+        "homeId": 1,
+        "name": "Xior",
+        "street": "Tramsingel",
+        "number": 27,
+        "postalcode": "4814 AB",
+        "city": "Breda",
+        "phonenumber": "0800 600 0180"
+    },
+    {
+        "homeId": 2,
+        "name": "T63",
+        "street": "Academiesingel",
+        "number": 40,
+        "postalcode": "4811 AC",
+        "city": "Breda",
+        "phonenumber": "076 522 0565"
+    },
+    {
+        "homeId": 3,
+        "name": "Herendispuut Dagobert",
+        "street": "Delpratsingel",
+        "number": 11,
+        "postalcode": "4811 AN",
+        "city": "Breda",
+        "phonenumber": "06 23062750"
+    }
+]
