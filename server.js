@@ -5,7 +5,7 @@ const importData = require("./data.json");
 const port = process.env.PORT || 3000
 
 app.get("/", (req,res) => {
-  res.send("Hello World. YOU BETTER WORK!");
+  res.send("Hello World!");
 })
 
 app.get("/classes", (req, res) => {
