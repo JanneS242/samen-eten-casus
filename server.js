@@ -73,7 +73,7 @@ app.post("/api/studenthome", (req, res) => {
     const { homeId } = req.query;
     var post;
     if (homeId) {
-        post = importStudentHomeData.find((post) => post.homeId === homeId);
+        post = importStudentHomeData.find((post) => post.homeid === homeid);
         if (post) res.status(200).send(post);
         else res.status(400).send(`Not Found`);
     }
