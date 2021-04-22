@@ -75,7 +75,7 @@ app.post("/api/studenthome", (req, res) => {
     const { homeId } = req.query;
     var post;
     if (homeId) {
-        post = importStudentHomeData.find((post) => post.homeid === homeid);
+        post = importStudentHomeData.find((post) => post.homeId === homeId);
         if (post) res.status(200).send(post);
         else res.status(400).send(`Not Found`);
     }
@@ -100,10 +100,10 @@ app.post("/api/studenthome", (req, res) => {
   //Delete studenthome with given homeId
   app.delete("/api/studenthome", (req, res) => {
         console.log(req.query);
-        const { homeid } = req.query;
+        const { homeId } = req.query;
         var post;
         if (homeId) {
-            post = importStudentHomeData.find((post) => post.homeid === homeid);
+            post = importStudentHomeData.find((post) => post.homeId === homeId);
             if (post)
                 res.status(202).send(post);
             else
