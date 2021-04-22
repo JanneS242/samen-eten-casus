@@ -8,9 +8,24 @@
 # image: node:latest
 
 stages:
+  - test
   - production
 
 
+
+  #
+# Testing nodejes backend
+# Our server uses a MySql database, so to run our testcases we also need a database.
+# We do NOT use the online production database, but spawn an independent test-db on Gitlab.
+# To do so, we have to install it into the container where we run our testcases.
+#
+testing:
+  stage: test
+  image: node:latest
+  script:
+    - npm run test
+  only:
+    - main
 
 #
 # Deploy to Heroku
