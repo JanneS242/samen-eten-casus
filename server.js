@@ -67,17 +67,17 @@ app.post("/api/studenthome", (req, res) => {
     }
   })
 
-//   //Details from studenthome with given homeId
-//   app.get("/api/studenthome", (req, res) => {
-//     console.log(req.query);
-//     const { homeId } = req.query;
-//     var post;
-//     if (homeId) {
-//         post = importStudentHomeData.find((post) => post.homeId === homeId);
-//         if (post) res.status(200).send(post);
-//         else res.status(400).send(`Not Found`);
-//     }
-//   })
+  //Details from studenthome with given homeId
+  app.get("/api/studenthome", (req, res) => {
+    console.log(req.query);
+    const { homeId } = req.query;
+    var post;
+    if (homeId) {
+        post = importStudentHomeData.find((post) => post.homeId === homeId);
+        if (post) res.status(200).send(post);
+        else res.status(400).send(`Not Found`);
+    }
+  })
 
 //   //Update studenthome with given homeId
 //   app.put("/api/studenthome/:homeid", (req, res) => {
