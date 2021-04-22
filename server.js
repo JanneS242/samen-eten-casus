@@ -18,23 +18,23 @@ app.get("/api/info", (req, res) => {
   res.status(200).send(importInfoData);
 })
 
-// //Studenthome info page
-// app.post("/api/studenthome", (req, res) => {
-//   let addedStudenthome = {
-//             homeid: importStudentHomeData.length + 1,
-//             name: req.body.name,
-//             streetname: req.body.streetname,
-//             number: req.body.number,
-//             zipcode: req.body.zipcode,
-//             city: req.body.city,
-//             phonenumber: req.body.phonenumber,
-//         };
-//         if (addedStudenthome) {
-//           importStudentHomeData.push(addedStudenthome);
-//           res.status(201).send(addedStudenthome);
-//         }
-//         res.status(400).send("Error: Studenthome is not added");
-//   })
+//Studenthome info page
+app.post("/api/studenthome", (req, res) => {
+  let addedStudenthome = {
+            homeid: importStudentHomeData.length + 1,
+            name: req.body.name,
+            streetname: req.body.streetname,
+            number: req.body.number,
+            zipcode: req.body.zipcode,
+            city: req.body.city,
+            phonenumber: req.body.phonenumber,
+        };
+        if (addedStudenthome) {
+          importStudentHomeData.push(addedStudenthome);
+          res.status(201).send(addedStudenthome);
+        }
+        res.status(400).send("Error: Studenthome is not added");
+  })
 
 //   //Search studenthome with name and/or city
 //   app.get("/api/studenthome", (req, res) => {
