@@ -1,0 +1,20 @@
+{
+  "name": "nodejs-samen-eten-casus-janne",
+  "version": "1.0.0",
+  "description": "Samen Eten casus",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "15.14.0"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "casus"
+  ],
+  "author": "Janne Sterk",
+  "license": "ISC"
+}
