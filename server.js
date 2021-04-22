@@ -1,15 +1,15 @@
 const express = require("express");
 const app = express();
 
-const importData = require("./data.json");
+const importInfoData = require("./infoData.json");
 const port = process.env.PORT || 3000
 
 app.get("/", (req,res) => {
-  res.send("Hello World!");
+  res.send("Welcome!");
 })
 
-app.get("/classes", (req, res) => {
-  res.send(importData);
+app.get("/api/info", (req, res) => {
+  res.status(200).send(importInfoData);
 })
 
 app.listen(port, () => {
