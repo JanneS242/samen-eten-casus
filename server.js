@@ -2,30 +2,30 @@ const express = require("express");
 const app = express();
 
 const importInfoData = require("./infoData.json");
-const importStudentHomeData = require("./studenthomesData.json")
+const importStudentHomeData = require("./studenthomesData")
 
 const port = process.env.PORT || 3000
 
 app.use(express.json());
 
-//General error message
-app.all("*", (req, res) => {
-  console.log("Catch-all endpoint aangeroepen")
+// //General error message
+// app.all("*", (req, res) => {
+//   console.log("Catch-all endpoint aangeroepen")
 
-  res.status(400).send("Endpoint " +req.url+ " does not exists")
-})
+//   res.status(400).send("Endpoint " +req.url+ " does not exists")
+// })
 
-//Error message
-app.use("*", (error, req, res, next) => {
-  console.log("Errorhandler called!")
-  // console.log(error)
+// //Error message
+// app.use("*", (error, req, res, next) => {
+//   console.log("Errorhandler called!")
+//   // console.log(error)
 
-  res.status(error.errCode).send({
-    error: "Some error occurred",
-    message : error.message
-  })
+//   res.status(error.errCode).send({
+//     error: "Some error occurred",
+//     message : error.message
+//   })
 
-})
+// })
 
 //Home-page
 app.get("/", (req,res) => {
@@ -38,9 +38,9 @@ app.get("/api/info", (req, res) => {
 })
 
 //Studenthome info page
-app.post("/api/studenthome", (req, res, next) => {
+app.post("/api/studenthome", (req, res) => {
   let addedStudenthome = {
-            homeid: importStudentHomeData.length + 1,
+            homeid: importStudentHomeData.studenthomes.length + 1,
             name: req.body.name,
             streetname: req.body.streetname,
             number: req.body.number,
@@ -49,15 +49,16 @@ app.post("/api/studenthome", (req, res, next) => {
             phonenumber: req.body.phonenumber,
         };
         if (addedStudenthome) {
-          importStudentHomeData.push(addedStudenthome);
+          importStudentHomeData.add(addedStudenthome, () =>{
+          });
           res.status(201).send(addedStudenthome);
         }
-        next({error: "Studenthome is not added", errCode: 400})
-        // res.status(400).send("Error: Studenthome is not added");
+        // next({error: "Studenthome is not added", errCode: 400})
+        res.status(400).send("Error: Studenthome is not added");
   })
 
   //Search studenthome with name and/or city
-  app.get("/api/studenthome", (req, res, next) => {
+  app.get("/api/studenthome", (req, res) => {
     console.log(req.query);
     const { city } = req.query;
     const { name } = req.query;
@@ -82,22 +83,22 @@ app.post("/api/studenthome", (req, res, next) => {
         if (post != null) {
             res.status(200).send(post);
         } else {
-          next({error : "Studenthome not found", errCode: 404})
-            // res.status(404).send("Not Found");
+          // next({error : "Studenthome not found", errCode: 404})
+            res.status(404).send("Not Found");
         }
     }
   })
 
   //Details from studenthome with given homeId
-  app.get("/api/studenthome/:homeId", (req, res, next) => {
+  app.get("/api/studenthome/:homeId", (req, res) => {
     console.log(req.params);
     const { homeId } = req.params;
     var post;
     if (homeId) {
     post = importStudentHomeData.find((post) => post.homeId == homeId);
     if (post) res.status(200).send(post);
-    else next({ error : "Studenthome not found" , errCode: 400})
-    //  res.status(400).send(`Not Found`);
+    else  res.status(400).send(`Not Found`);
+    // next({ error : "Studenthome not found" , errCode: 400})
     }
   })
 
