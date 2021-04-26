@@ -8,6 +8,25 @@ const port = process.env.PORT || 3000
 
 app.use(express.json());
 
+//General error message
+app.all("*", (req, res) => {
+  console.log("Catch-all endpoint aangeroepen")
+
+  res.status(400).send("Endpoint " +req.url+ " does not exists")
+})
+
+//Error message
+app.use("*", (error, req, res, next) => {
+  console.log("Errorhandler called!")
+  // console.log(error)
+
+  res.status(error.errCode).send({
+    error: "Some error occurred",
+    message : error.message
+  })
+
+})
+
 //Home-page
 app.get("/", (req,res) => {
   res.send("Welcome!");
@@ -19,7 +38,7 @@ app.get("/api/info", (req, res) => {
 })
 
 //Studenthome info page
-app.post("/api/studenthome", (req, res) => {
+app.post("/api/studenthome", (req, res, next) => {
   let addedStudenthome = {
             homeid: importStudentHomeData.length + 1,
             name: req.body.name,
@@ -33,11 +52,12 @@ app.post("/api/studenthome", (req, res) => {
           importStudentHomeData.push(addedStudenthome);
           res.status(201).send(addedStudenthome);
         }
-        res.status(400).send("Error: Studenthome is not added");
+        next({error: "Studenthome is not added", errCode: 400})
+        // res.status(400).send("Error: Studenthome is not added");
   })
 
   //Search studenthome with name and/or city
-  app.get("/api/studenthome", (req, res) => {
+  app.get("/api/studenthome", (req, res, next) => {
     console.log(req.query);
     const { city } = req.query;
     const { name } = req.query;
@@ -62,20 +82,22 @@ app.post("/api/studenthome", (req, res) => {
         if (post != null) {
             res.status(200).send(post);
         } else {
-            res.status(404).send("Not Found");
+          next({error : "Studenthome not found", errCode: 404})
+            // res.status(404).send("Not Found");
         }
     }
   })
 
   //Details from studenthome with given homeId
-  app.get("/api/studenthome/:homeId", (req, res) => {
+  app.get("/api/studenthome/:homeId", (req, res, next) => {
     console.log(req.params);
     const { homeId } = req.params;
     var post;
     if (homeId) {
     post = importStudentHomeData.find((post) => post.homeId == homeId);
     if (post) res.status(200).send(post);
-    else res.status(400).send(`Not Found`);
+    else next({ error : "Studenthome not found" , errCode: 400})
+    //  res.status(400).send(`Not Found`);
     }
   })
 
@@ -106,20 +128,19 @@ app.post("/api/studenthome", (req, res) => {
 //         res.status(201).send(studenthome);
 //   });
 
-//   //Delete studenthome with given homeId
-//   app.delete("/api/studenthome", (req, res) => {
-//         console.log(req.query);
-//         const { homeId } = req.query;
-//         var post;
-//         if (homeId) {
-//             post = importStudentHomeData.find((post) => post.homeId === homeId);
-//             if (post)
-//                 res.status(202).send(post);
-//             else
-//                 res.status(400).send(`Can't delete studenthome`);
-//         }
-//         res.status(200).send(importStudentHomeData);
-//     });
+  // //Delete studenthome with given homeId
+  // app.delete("/api/studenthome", (req, res) => {
+  //       console.log(req.query);
+  //       const { homeId } = req.query;
+  //       var post;
+  //       if (homeId) {
+  //           post = importStudentHomeData.find((post) => post.homeId === homeId);
+  //           if (post)
+  //               res.status(202).send(post);
+  //           else
+  //               res.status(400).send(`Can't delete studenthome`);
+  //       }
+  //   });
 
 
 
