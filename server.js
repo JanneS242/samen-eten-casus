@@ -79,37 +79,26 @@ app.post("/api/studenthome", (req, res) => {
     }
   })
 
-  // app.get("/api/studenthome", (req, res) => {
-  //   console.log(req.query);
-  //   const { homeId } = req.params;
-  //   var post;
-  //   if (homeId) {
-  //       post = importStudentHomeData.find((post) => post.homeid === homeId);
-  //       if (post) res.status(200).send(post);
-  //       else res.status(400).send(`Not Found`);
-  //   }
-  // })
+  // //Update studenthome with given homeId
+  // app.put("/api/studenthome/:homeId", (req, res) => {
+  //       const { homeId } = req.params;
+  //       let studenthome = importStudentHomeData.filter((studenthome) => {
+  //           return studenthome.homeId == homeId;
+  //       })[0];
+  //       const index = importStudentHomeData.indexOf(studenthome);
+  //       let keys = Object.keys(req.body);
+  //       keys.forEach((key) => {
+  //           studenthome[key] = req.body[key];
+  //       });
+  //       importStudentHomeData[index] = studenthome;
+  //       res.json(importStudentHomeData[index]);
+  //       res.status(201).send(studenthome);
+  // });
 
-//   //Update studenthome with given homeId
-//   app.put("/api/studenthome/:homeid", (req, res) => {
-//         let homeid = req.params.homeid;
-//         let studenthome = importStudentHomeData.filter((studenthome) => {
-//             return studenthome.homeid == homeid;
-//         })[0];
-//         const index = importStudentHomeData.indexOf(studenthome);
-//         let keys = Object.keys(req.body);
-//         keys.forEach((key) => {
-//             studenthome[key] = req.body[key];
-//         });
-//         importStudentHomeData[index] = studenthome;
-//         res.json(importStudentHomeData[index]);
-//         res.status(201).send(studenthome);
-//   });
-
-//   //Delete studenthome with given homeId
-//   app.delete("/api/studenthome", (req, res) => {
-//         console.log(req.query);
-//         const { homeId } = req.query;
+// //   //Delete studenthome with given homeId
+//   app.delete("/api/studenthome/:homeId", (req, res) => {
+//         console.log(req.params);
+//         let homeId = req.params.homeId;
 //         var post;
 //         if (homeId) {
 //             post = importStudentHomeData.find((post) => post.homeId === homeId);
