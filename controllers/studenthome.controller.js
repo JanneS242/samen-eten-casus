@@ -1,106 +1,154 @@
-var logger = require('tracer').console()
+var logger = require("tracer").console();
+const studenthomes = require("../studenthome.json");
 
-var studenthomes = require('../controllers/studenthome.controller')
-
-//Create a studenthome (POST method)
-exports.create = function(req, res){
-    let addedStudenthome = {
-        homeId: importStudentHomeData.length + 1,
-        name: req.body.name,
-        street: req.body.streetname,
-        number: req.body.number,
-        postalcode: req.body.zipcode,
-        city: req.body.city,
-        phonenumber: req.body.phonenumber,
-    };
-    if (addedStudenthome) {
-      studenthomes.push(addedStudenthome);
-      res.status(201).send(addedStudenthome);
-    } else{
-        // next({error: "Studenthome is not added", errCode: 400})
-        res.status(400).send("Error: Studenthome is not added");
-    }
-}
-
-//Get all studenthomes (GET method)
-exports.getAll = function(req, res){
-    res.status(200).send(studenthomes)
-}
-
-//Get studenthome by homeId
-exports.searchByHomeId = function(req, res){
-    logger.log(req.params);
+exports.searchByHomeId = function(req, res, next) {
     const { homeId } = req.params;
-    var post;
-    if (homeId) {
-    post = studenthomes.find((post) => post.homeId == homeId);
-    if (post) {
-        res.status(200).send(post);
-    } else {
-        // next({ error : "Studenthome not found" , errCode: 400})
-        res.status(400).send(`Not Found`);
+    logger.log(req.params);
+    let hometoreturn = studenthomes.find((home) => home.homeid == homeId);
+    if(hometoreturn){
+        return res.status(200).json(hometoreturn);
+    } else{
+         next({ message: "Home doesn\'t exist", errCode: 404 })
     }
-}
-
-//Get studenthome by name and/or city
-exports.searchByNameAndCity = function(req, res){
+};
+exports.searchByNameAndCity = function(req, res) {
+    logger.log(req.query);
     const { city } = req.query;
     const { name } = req.query;
     logger.log(city);
     logger.log(name);
     var post;
     var post2;
-    if (name) {
+    if(city || name){
+    if(name) {
         post = studenthomes.filter((post) => post.name.startsWith(name));
+        
     }
-    console.log(post);
-    if (city) {
-        if (post != null) {
+    logger.log(post);
+    if(city){
+        if(post != null){
             post2 = post.filter((post2) => post2.city == city);
-        } else {
+        }else{
             post2 = studenthomes.filter((post2) => post2.city == city);
         }
     }
-    if (post2 != null) {
+    if(post2 != null){
         res.status(200).send(post2);
-    } else {
-        if (post != null) {
+    }else{
+        if(post != null){
             res.status(200).send(post);
-        } else {
-        //   next({error : "Studenthome not found", errCode: 404})
-            res.status(404).send("Not Found");
+        } else{
+            next({ message: "Not Found", errCode: 404 })
         }
+    }} else {
+        res.status(200).send(studenthomes);
     }
-}
-
-//Update studenthome (PUT method)
-exports.update = function(req, res){
-    let homeId = req.params.homeId;
-    let studenthome = studenthomes.filter((studenthome) => {
-        return studenthome.homeId == homeId;
+};
+exports.delete = function(req, res) {
+    const { homeId} = req.params;
+    let homeToDelete = studenthomes.find((hometofind) => hometofind.homeid == homeId);
+    if(homeToDelete !== null){
+        logger.log(homeToDelete.homeid);
+        studenthomes = studenthomes.filter((home) => home.homeid !== homeToDelete.homeid);
+        res.status(200).json(homeToDelete);
+    }else{
+        next({ message: "Home doesn\'t exist", errCode: 404 })
+    }
+};
+exports.update = function(req, res) {
+    logger.log(req.params)
+    const { homeId } = req.params;
+    // let home = studenthomes.find((home) => home.homeid == homeid);
+    let home = studenthomes.filter(home => {
+        return home.homeid == homeId;
     })[0];
-    const index = studenthomes.indexOf(studenthome);
-    let keys = Object.keys(req.body);
-    keys.forEach((key) => {
-        studenthome[key] = req.body[key];
+    const index = studenthomes.indexOf(home);
+    const body = req.body;
+    let keys = Object.keys(body)
+    keys.forEach(key =>  {
+        if(home[key]){
+            home[key] = body[key];
+        }
     });
-    studenthomes[index] = studenthome;
-    res.json(studenthomes[index]);
-    res.status(201).send(studenthome);
-}
+    studenthomes[index] = home;
+    // studenthomes.find((home) => home.homeid = homeid) = JSON.stringify(body);
+    res.status(200).send(home).end();
+};
+// exports.addUsertoStudenhome = function(req, res) {
+//     const { homeId } = req.params;
+//     var user = req.body;
+//     let keys = Object.keys(user);
+//     if(keys[0] == 'userid' && keys.length == 1){
+//         let index = studenthomes.findIndex((home) => home.homeid == homeId);
+//         let homeusers = studenthomes[index]["users"];
+//         let isdup = false;
+//         homeusers.forEach(homeuser => {
+//             if(homeuser["userid"] == user["userid"]){
+//                 isdup = true;
+//             }
+//         });
+//         if(isdup == true){
+//          next({ message: "user already in home", errCode: 409 })
+//         }else{
+//             studenthomes[index]["users"].push(user);
+//             logger.log(studenthomes[index]["users"]);
+//             res.status(200).send('added new user to home');
+//         }
+//     } else{
+//       next({ message: "wrong body format", errCode: 400 })
+//     }
+// };
 
-//Delete studenthome
-exports.delete = function(req, res){
-    logger.log(req.params.homeId);
-    let homeId = req.params.homeId
-    var post;
-    if (homeId) {
-        post = importStudentHomeData.find((post) => post.homeId === homeId);
-        if (post)
-            res.status(202).send(post);
-        else
-            res.status(400).send(`Can't delete studenthome`);
+exports.create = function(req, res) {
+    logger.log(maxId);
+    var body = req.body;
+    if(body){
+        var keys = Object.keys(studenthomes[0]);
+        logger.log(keys);
+        keys = keys.filter(key => key !== 'homeid');
+        keys = keys.filter(key => key !== 'users')
+        logger.log(keys);
+        keys.forEach(key => {
+            logger.log(key);
+            if(!(body[key])){
+                next({ message: "wrong body format", errCode: 400 })
+            }
+        });
+        body = addToObject(body, "homeid", maxId.toString(), 0);
+        // body["homeid"] = maxId.toString();
+        body["users"] = [];
+        maxId = maxId + 1;
+        studenthomes.push(body);
+        logger.log(studenthomes);
+        res.status(201).json(body).end();
+    }else{
+        next({ message: "The method can't succeed", errCode: 400 })
     }
-}
+};
 
-}
+// var maxId = getmaxId();
+// function getmaxId(){
+//     let max = 0;
+//     studenthomes.forEach(home =>{
+//         if(parseInt(home.homeid) > max){
+//             max = home.homeid;
+//         }
+//     });
+//     max++;
+//     return max;
+// };
+// var addToObject = function(obj, key, value, index){
+//     var temp ={};
+//     var i = 0;
+//     for(var prop in obj){
+//             if(i == index && key && value){
+//                 temp[key] = value;
+//             }
+//             temp[prop] = obj[prop];
+//             i++;
+//     }
+//     if(!index && key && value){
+//         temp[key] = value;
+//     }
+//     return temp;
+// };

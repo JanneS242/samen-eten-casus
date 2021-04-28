@@ -1,21 +1,22 @@
 module.exports = function(app) {
-    var studenthomeList = require('../controllers/studenthome.controller');
+ 
+   var studenthome = require('../controllers/studenthome.controller');
+    
+   //Retrieve a single studenthome by homeId
+   app.get('/api/studenthome/:homeId', studenthome.searchByHomeId);
 
-    //Create a new studenthome
-    app.post('/api/studenthome', studenthomeList.create);
+   //Retrieve a single studenthome by name and/or city
+   app.get('/api/studenthome', studenthome.searchByNameAndCity);
+    
+   //Create a new studenthome
+   app.post('/api/studenthome', studenthome.create);
 
-    //Retrieve all studenthomes
-    app.get('/api/studenthome', studenthomeList.getAll);
-
-    //Retrieve a single studenthome by homeId
-    app.get('/api/studenthome/:homeId', studenthomeList.searchByHomeId);
-
-    // //Retrieve a single studenthome by name and/or city
-    // app.get('/api/studenthome', studenthomeList.searchByNameAndCity);
-
-    // //Update studenthome
-    // app.put('/api/studenthome/:homeId', studenthomeList.update);
-
-    // //Delete a studenthome with homeId
-    // app.delete('/api/studenthome/:homeId', studenthomeList.delete);
-}
+   //Delete a studenthome 
+   app.delete('/api/studenthome/:homeId', studenthome.delete);
+    
+   //Update a studenthome
+   app.put('/api/studenthome/:homeId', studenthome.update);
+    
+//    app.put('/api/studenthome/:homeId/user', studenthome.addUsertoStudenhome);
+    
+   }

@@ -3,6 +3,9 @@ var logger = require('tracer').console()
 const express = require("express");
 const app = express();
 
+const bodyParser = require("body-parser");
+app.use(bodyParser.json());
+
 const importInfoData = require("./infoData.json");
 
 const port = process.env.PORT || 3000
