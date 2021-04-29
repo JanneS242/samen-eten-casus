@@ -2,11 +2,12 @@ const importData = require("../infoData.json");
 const importUser = require("../user.json");
 var logger = require("tracer").console();
 
-
+//UC-103 Systeeminfo opvragen
 exports.info = function (req, res) {
   res.status(200).json(importData).end();
 };
 
+//UC-101 Registreren
 exports.create = function(req, res) {
     logger.log(maxId);
     var body = req.body;
@@ -33,10 +34,12 @@ exports.create = function(req, res) {
     }
 };
 
+//Get voor het testen van aanmaken
 exports.read = function (req, res) {
   res.status(200).json(importUser).end();
 };
 
+//De key genereren voor de user
 function makeKey(length) {
   var result = [];
   var characters =
@@ -49,6 +52,7 @@ function makeKey(length) {
   }
   return result.join("");
 };
+
 
 var maxId = getmaxId();
 function getmaxId() {

@@ -6,7 +6,29 @@
         "number": 27,
         "postalcode": "4814 AB",
         "city": "Breda",
-        "phonenumber": "0800 600 0180"
+        "phonenumber": "0800 600 0180",
+        "users" : [
+
+        ],
+        "meals" : [
+            {   "mealid": 1, 
+                "name" : "Cheese sandwich", 
+                "description": "Bread with cheese and additional butter", 
+                "created-on" : "2021-04-26", 
+                "offered-on": "2021-04-26", 
+                "price": "€2", 
+                "allergy-information": "lactose", 
+                "ingredients": ["Bread", "Butter", "Cheese"] },
+
+            {   "mealid": 2,
+                "name" : "Cheese and ham sandwich", 
+                "description": "Bread with cheese and ham and additional butter", 
+                "created-on" : "2021-04-26", 
+                "offered-on": "2021-04-26", 
+                "price": "€3", 
+                "allergy-information": "lactose", 
+                "ingredients": ["Bread", "Butter", "Cheese", "Ham"] }
+        ]
     },
     {
         "homeId": 2,
@@ -15,7 +37,10 @@
         "number": 40,
         "postalcode": "4811 AC",
         "city": "Breda",
-        "phonenumber": "076 522 0565"
+        "phonenumber": "076 522 0565",
+        "users" : [
+
+        ]
     },
     {
         "homeId": 3,
@@ -24,6 +49,9 @@
         "number": 11,
         "postalcode": "4811 AN",
         "city": "Breda",
-        "phonenumber": "06 23062750"
+        "phonenumber": "06 23062750",
+        "users": [
+            
+        ]
     }
 ]
