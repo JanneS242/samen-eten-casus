@@ -55,10 +55,11 @@ exports.delete = function(req, res) {
         next({ message: "Home doesn\'t exist", errCode: 404 })
     }
 };
+
 exports.update = function(req, res) {
     logger.log(req.params)
     const { homeId } = req.params;
-    // let home = studenthomes.find((home) => home.homeid == homeid);
+    let home = studenthomes.find((home) => home.homeid == homeid);
     let home = studenthomes.filter(home => {
         return home.homeid == homeId;
     })[0];
@@ -71,33 +72,34 @@ exports.update = function(req, res) {
         }
     });
     studenthomes[index] = home;
-    // studenthomes.find((home) => home.homeid = homeid) = JSON.stringify(body);
+    studenthomes.find((home) => home.homeid = homeid) = JSON.stringify(body);
     res.status(200).send(home).end();
 };
-// exports.addUsertoStudenhome = function(req, res) {
-//     const { homeId } = req.params;
-//     var user = req.body;
-//     let keys = Object.keys(user);
-//     if(keys[0] == 'userid' && keys.length == 1){
-//         let index = studenthomes.findIndex((home) => home.homeid == homeId);
-//         let homeusers = studenthomes[index]["users"];
-//         let isdup = false;
-//         homeusers.forEach(homeuser => {
-//             if(homeuser["userid"] == user["userid"]){
-//                 isdup = true;
-//             }
-//         });
-//         if(isdup == true){
-//          next({ message: "user already in home", errCode: 409 })
-//         }else{
-//             studenthomes[index]["users"].push(user);
-//             logger.log(studenthomes[index]["users"]);
-//             res.status(200).send('added new user to home');
-//         }
-//     } else{
-//       next({ message: "wrong body format", errCode: 400 })
-//     }
-// };
+
+exports.addUsertoStudenhome = function(req, res) {
+    const { homeId } = req.params;
+    var user = req.body;
+    let keys = Object.keys(user);
+    if(keys[0] == 'userid' && keys.length == 1){
+        let index = studenthomes.findIndex((home) => home.homeid == homeId);
+        let homeusers = studenthomes[index]["users"];
+        let isdup = false;
+        homeusers.forEach(homeuser => {
+            if(homeuser["userid"] == user["userid"]){
+                isdup = true;
+            }
+        });
+        if(isdup == true){
+         next({ message: "user already in home", errCode: 409 })
+        }else{
+            studenthomes[index]["users"].push(user);
+            logger.log(studenthomes[index]["users"]);
+            res.status(200).send('added new user to home');
+        }
+    } else{
+      next({ message: "wrong body format", errCode: 400 })
+    }
+};
 
 exports.create = function(req, res) {
     logger.log(maxId);
@@ -126,29 +128,29 @@ exports.create = function(req, res) {
     }
 };
 
-// var maxId = getmaxId();
-// function getmaxId(){
-//     let max = 0;
-//     studenthomes.forEach(home =>{
-//         if(parseInt(home.homeid) > max){
-//             max = home.homeid;
-//         }
-//     });
-//     max++;
-//     return max;
-// };
-// var addToObject = function(obj, key, value, index){
-//     var temp ={};
-//     var i = 0;
-//     for(var prop in obj){
-//             if(i == index && key && value){
-//                 temp[key] = value;
-//             }
-//             temp[prop] = obj[prop];
-//             i++;
-//     }
-//     if(!index && key && value){
-//         temp[key] = value;
-//     }
-//     return temp;
-// };
+var maxId = getmaxId();
+function getmaxId(){
+    let max = 0;
+    studenthomes.forEach(home =>{
+        if(parseInt(home.homeid) > max){
+            max = home.homeid;
+        }
+    });
+    max++;
+    return max;
+};
+var addToObject = function(obj, key, value, index){
+    var temp ={};
+    var i = 0;
+    for(var prop in obj){
+            if(i == index && key && value){
+                temp[key] = value;
+            }
+            temp[prop] = obj[prop];
+            i++;
+    }
+    if(!index && key && value){
+        temp[key] = value;
+    }
+    return temp;
+};
