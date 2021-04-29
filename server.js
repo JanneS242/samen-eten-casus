@@ -6,13 +6,13 @@ const app = express();
 const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 
-require('./routes/studenthome.routes')(app)
+require('./src/routes/studenthome.routes')(app)
 
-require('./routes/error.routes')(app)
+require('./src/routes/error.routes')(app)
 
-require('./routes/meal.routes')(app)
+require('./src/routes/meal.routes')(app)
 
-require('./routes/user.routes')(app)
+require('./src/routes/user.routes')(app)
 
 const port = process.env.PORT || 3000
 

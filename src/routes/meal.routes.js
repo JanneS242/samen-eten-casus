@@ -1,6 +1,6 @@
 module.exports = function(app) {
 
-    var meals = require('../controllers/meal.controller');
+    var meals = require('../src/controllers/meal.controller');
 
     //UC-303 Lijst van maaltijden opvragen
     app.get('/api/studenthome/:homeId/meal', meals.findAll);

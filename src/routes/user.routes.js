@@ -1,5 +1,5 @@
 module.exports = function(app) {
-    var user = require('../controllers/user.controller');
+    var user = require('../../src/controllers/user.controller');
 
     //UC-103 Systeeminfo opvragen
     app.get('/api/info', user.info);

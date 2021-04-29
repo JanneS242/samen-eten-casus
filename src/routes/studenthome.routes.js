@@ -1,6 +1,6 @@
 module.exports = function(app) {
  
-   var studenthome = require('../controllers/studenthome.controller');
+   var studenthome = require('../src/controllers/studenthome.controller');
     
    //Retrieve a single studenthome by homeId
    app.get('/api/studenthome/:homeId', studenthome.searchByHomeId);
@@ -17,6 +17,6 @@ module.exports = function(app) {
    //Update a studenthome
    app.put('/api/studenthome/:homeId', studenthome.update);
     
-//    app.put('/api/studenthome/:homeId/user', studenthome.addUsertoStudenhome);
+   app.put('/api/studenthome/:homeId/user', studenthome.addUsertoStudenhome);
     
    }
