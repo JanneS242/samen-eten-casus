@@ -1,6 +1,6 @@
 module.exports = function(app) {
  
-   var studenthome = require('../src/controllers/studenthome.controller');
+   var studenthome = require('../../src/controllers/studenthome.controller');
     
    //Retrieve a single studenthome by homeId
    app.get('/api/studenthome/:homeId', studenthome.searchByHomeId);

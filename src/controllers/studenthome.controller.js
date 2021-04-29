@@ -59,7 +59,7 @@ exports.delete = function(req, res) {
 exports.update = function(req, res) {
     logger.log(req.params)
     const { homeId } = req.params;
-    let home = studenthomes.find((home) => home.homeid == homeid);
+    // let home = studenthomes.find((home) => home.homeid == homeid);
     let home = studenthomes.filter(home => {
         return home.homeid == homeId;
     })[0];

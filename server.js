@@ -27,3 +27,5 @@ app.get("/", (req,res) => {
 app.listen(port, () => {
   logger.log(`Listening on port http://localhost:${port}`)
 })
+
+module.exports = app;

@@ -1,5 +1,5 @@
 module.exports = function(app) {
-    var error = require('../src/controller/error.controller.js');
+    var error = require('.././controllers/error.controller');
 
     app.all("*", error.logRequest)
 

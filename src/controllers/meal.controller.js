@@ -1,5 +1,5 @@
 var logger = require("tracer").console();
-const studenthomes = require("../studentenhome.json");
+const studenthomes = require("../studenthome.json");
 
 //UC-303 Lijst van maaltijden opvragen
 exports.findAll = function (req, res, next) {

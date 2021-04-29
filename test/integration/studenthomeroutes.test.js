@@ -1,5 +1,7 @@
 const chai = require("chai");
-// const chaiHttp = require("chai-http");
+const chaiHttp = require("chai-http");
+chai.use(chaiHttp);
+
 const server = require("../../server");
 // const database = require("../../src/studenthome.json")
 const assert = require("assert");

@@ -1,6 +1,6 @@
 module.exports = function(app) {
 
-    var meals = require('../src/controllers/meal.controller');
+    var meals = require('../../src/controllers/meal.controller');
 
     //UC-303 Lijst van maaltijden opvragen
     app.get('/api/studenthome/:homeId/meal', meals.findAll);
@@ -15,5 +15,5 @@ module.exports = function(app) {
     app.put('/api/studenthome/:homeId/meal/:mealId', meals.updateMeal);
 
     //UC-305 Maaltijd verwijderen
-    app.delete('/api/studenthome/:homeId/meal/:mealId', meals.delete);
+    app.delete('/api/studenthome/:homeId/meal/:mealId', meals.deleteMeal);
 }
