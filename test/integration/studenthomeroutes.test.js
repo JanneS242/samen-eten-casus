@@ -40,33 +40,33 @@ describe("StudentHome", function () {
         });
       
       
-      // it("TC-201-2 should return valid error when postalcode is invalid", (done) => {
-      //   chai
-      //     .request(server)
-      //     .post("/api/studenthome")
-      //     .send({
-      //       name: "Woonhuis",
-      //       street: "BergLaan",
-      //       number: "25",
-      //       //Enter an invalid postalcode
-      //       postalcode: "2A3456",
-      //       city: "Amsterdam",
-      //       phonenumber: "0164230480",
-      //     })
-      //     .end((err, res) => {
-      //       assert.ifError(err);
-      //       res.should.have.status(400);
-      //       res.should.be.an("object");
+      it("TC-201-2 should return valid error when postalcode is invalid", (done) => {
+        chai
+          .request(server)
+          .post("/api/studenthome")
+          .send({
+            name: "Woonhuis",
+            street: "BergLaan",
+            number: "25",
+            //Enter an invalid postalcode
+            postalcode: "2A3456",
+            city: "Amsterdam",
+            phonenumber: "0164230480",
+          })
+          .end((err, res) => {
+            assert.ifError(err);
+            res.should.have.status(400);
+            res.should.be.an("object");
    
-      //       res.body.should.be.an("object").that.has.all.keys("message", "error");
+            res.body.should.be.an("object").that.has.all.keys("message", "error");
    
-      //       let { message, error } = res.body;
-      //       message.should.be.a("string").that.equals("Postal code is invalid");
-      //       error.should.be.a("string");
+            let { message, error } = res.body;
+            message.should.be.a("string").that.equals("Postal code is invalid");
+            error.should.be.a("string");
    
-      //       done();
-      //     });
-      // });
+            done();
+          });
+      });
 
     
       
