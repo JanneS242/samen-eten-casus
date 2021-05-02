@@ -117,6 +117,8 @@ exports.create = function(req, res, next) {
 
         let postalCodeVar = body["postalcode"];
         let phoneNumberVar = body["phonenumber"];
+        let streetVar = body["street"];
+        let numberVar = body["number"];
 
         if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
             next({ message: "An element is missing!", errCode: 400 })
@@ -124,6 +126,8 @@ exports.create = function(req, res, next) {
             next({ message: "Postal code is invalid", errCode: 400})
         } else if(!validatePhoneNumber(phoneNumberVar)){
             next({ message: "Phonenumber is invalid", errCode: 400})
+        } else if(checkIfHomeAlreadyExists(streetVar, numberVar)){
+            next({ message: "This studenthome already exists", errCode: 400})
         } else {
             studenthomes.push(body);
             logger.log(studenthomes);
@@ -152,11 +156,16 @@ function getmaxId(){
 
 function validatePostalCode(value) {
     return /^[1-9][0-9]{3}[ ]?([A-RT-Za-rt-z][A-Za-z]|[sS][BCbcE-Re-rT-Zt-z])$/.test(value);
-  }
+}
 
-  function validatePhoneNumber(value) {
+function validatePhoneNumber(value) {
     return /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im.test(value);
-  }
+}
+
+function checkIfHomeAlreadyExists(street, number){
+    var isInArray = studenthomes.find(function(el){ return el.street === street && el.number === number }) !== undefined;
+    return isInArray
+}
 
 
 var addToObject = function(obj, key, value, index){

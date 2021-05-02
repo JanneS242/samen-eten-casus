@@ -98,33 +98,33 @@ describe("StudentHome", function () {
           });
       });
       
-      // it("TC-201-4 should return valid error when studenthome already exists", (done) => {
-      //   chai
-      //     .request(server)
-      //     .post("/api/studenthome")
-      //     .send({
-      //         //Enter already existing studenthome
-      //       name: "T63",
-      //       street: "Academiesingel",
-      //       number: 40,
-      //       postalcode: "4811AC",
-      //       city: "Breda",
-      //       phonenumber: "0765220565",
-      //     })
-      //     .end((err, res) => {
-      //       assert.ifError(err);
-      //       res.should.have.status(400);
-      //       res.should.be.an("object");
+      it("TC-201-4 should return valid error when studenthome already exists", (done) => {
+        chai
+          .request(server)
+          .post("/api/studenthome")
+          .send({
+              //Enter already existing studenthome with already existing adress
+            name: "T63",
+            street: "Academiesingel",
+            number: 40,
+            postalcode: "4811AC",
+            city: "Breda",
+            phonenumber: "0765220565",
+          })
+          .end((err, res) => {
+            assert.ifError(err);
+            res.should.have.status(400);
+            res.should.be.an("object");
    
-      //       res.body.should.be.an("object").that.has.all.keys("message", "error");
+            res.body.should.be.an("object").that.has.all.keys("message", "error");
    
-      //       let { message, error } = res.body;
-      //       message.should.be.a("string").that.equals("This studenthome already exists");
-      //       error.should.be.a("string");
+            let { message, error } = res.body;
+            message.should.be.a("string").that.equals("This studenthome already exists");
+            error.should.be.a("string");
    
-      //       done();
-      //     });
-      // });
+            done();
+          });
+      });
 
       //TC-201-5 Niet ingelogd
       //TC-201-6 Studentenhuis succesvol toegevoegd
