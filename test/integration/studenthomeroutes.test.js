@@ -109,7 +109,7 @@ describe("StudentHome", function () {
       //       number: 40,
       //       postalcode: "4811AC",
       //       city: "Breda",
-      //       phonenumber: "076 522 0565",
+      //       phonenumber: "0765220565",
       //     })
       //     .end((err, res) => {
       //       assert.ifError(err);
@@ -125,8 +125,35 @@ describe("StudentHome", function () {
       //       done();
       //     });
       // });
+
       //TC-201-5 Niet ingelogd
       //TC-201-6 Studentenhuis succesvol toegevoegd
+      it("TC-201-6 should return body when body is correct", (done) => {
+        chai
+          .request(server)
+          .post("/api/studenthome")
+          .send({
+              //Enter already existing studenthome
+            name: "Example",
+            street: "Straat",
+            number: 35,
+            postalcode: "4812AC",
+            city: "Breda",
+            phonenumber: "0765220565",
+          })
+          .end((err, res) => {
+            res.should.have.status(200);
+            res.should.be.an("object");
+            
+            res.body.should.be.an("object")
+   
+            // let { message, error } = res.body;
+            // message.should.be.a("string").that.equals("This studenthome already exists");
+            // error.should.be.a("string");
+   
+            done();
+          });
+      });
     });
 
     // describe("searchByNameAndCity", function () {

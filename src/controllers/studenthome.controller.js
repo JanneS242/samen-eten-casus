@@ -110,34 +110,27 @@ exports.create = function(req, res, next) {
         keys = keys.filter(key => key !== 'homeId');
         keys = keys.filter(key => key !== 'users')
         logger.log(keys);
-        // keys.forEach(key => {
-        //     logger.log(key);
-        //     if(!(body[key])){
-        //         next({ message: "An element is missing!", errCode: 400 })
-        //         // res.status(400).send("An element is missing!");
-        //     }
-        // });
         body = addToObject(body, "homeId", maxId.toString(), 0);
         // body["homeId"] = maxId.toString();
         body["users"] = [];
         maxId = maxId + 1;
+
+        let postalCodeVar = body["postalcode"];
+        let phoneNumberVar = body["phonenumber"];
+
         if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
             next({ message: "An element is missing!", errCode: 400 })
-        }
-        
-        let postalCodeVar = body["postalcode"];
-        if(!validatePostalCode(postalCodeVar)){
+        } else if(!validatePostalCode(postalCodeVar)){
             next({ message: "Postal code is invalid", errCode: 400})
-        }
-
-        let phoneNumberVar = body["phonenumber"];
-        if(!validatePhoneNumber(phoneNumberVar)){
+        } else if(!validatePhoneNumber(phoneNumberVar)){
             next({ message: "Phonenumber is invalid", errCode: 400})
+        } else {
+            studenthomes.push(body);
+            logger.log(studenthomes);
+        
+            res.status(200).json(body)
         }
-
-        studenthomes.push(body);
-        logger.log(studenthomes);
-        // res.status(201).json(body).end();
+    
     }else {
     // if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
         next({ message: "The method did not succeed", errCode: 400 })
