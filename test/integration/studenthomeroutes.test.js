@@ -70,33 +70,33 @@ describe("StudentHome", function () {
 
     
       
-      // it("TC-201-3 should return valid error when phonenumber is invalid", (done) => {
-      //   chai
-      //     .request(server)
-      //     .post("/api/studenthome")
-      //     .send({
-      //       name: "Woonhuis",
-      //       street: "BergLaan",
-      //       number: "25",
-      //       postalcode: "4819AC",
-      //       city: "Amsterdam",
-      //       //Enter invalid phonenumber
-      //       phonenumber: "123456789023",
-      //     })
-      //     .end((err, res) => {
-      //       assert.ifError(err);
-      //       res.should.have.status(400);
-      //       res.should.be.an("object");
+      it("TC-201-3 should return valid error when phonenumber is invalid", (done) => {
+        chai
+          .request(server)
+          .post("/api/studenthome")
+          .send({
+            name: "Woonhuis",
+            street: "BergLaan",
+            number: "25",
+            postalcode: "4819AC",
+            city: "Amsterdam",
+            //Enter invalid phonenumber
+            phonenumber: "123456789023908",
+          })
+          .end((err, res) => {
+            assert.ifError(err);
+            res.should.have.status(400);
+            res.should.be.an("object");
    
-      //       res.body.should.be.an("object").that.has.all.keys("message", "error");
+            res.body.should.be.an("object").that.has.all.keys("message", "error");
    
-      //       let { message, error } = res.body;
-      //       message.should.be.a("string").that.equals("Phonenumber is invalid");
-      //       error.should.be.a("string");
+            let { message, error } = res.body;
+            message.should.be.a("string").that.equals("Phonenumber is invalid");
+            error.should.be.a("string");
    
-      //       done();
-      //     });
-      // });
+            done();
+          });
+      });
       
       // it("TC-201-4 should return valid error when studenthome already exists", (done) => {
       //   chai

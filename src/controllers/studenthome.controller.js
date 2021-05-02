@@ -124,10 +124,15 @@ exports.create = function(req, res, next) {
         if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
             next({ message: "An element is missing!", errCode: 400 })
         }
-        // const regexPostalCode = `/^[1-9][0-9]{3}[ ]?([A-RT-Za-rt-z][A-Za-z]|[sS][BCbcE-Re-rT-Zt-z])$/`
+        
         let postalCodeVar = body["postalcode"];
         if(!validatePostalCode(postalCodeVar)){
             next({ message: "Postal code is invalid", errCode: 400})
+        }
+
+        let phoneNumberVar = body["phonenumber"];
+        if(!validatePhoneNumber(phoneNumberVar)){
+            next({ message: "Phonenumber is invalid", errCode: 400})
         }
 
         studenthomes.push(body);
@@ -154,6 +159,10 @@ function getmaxId(){
 
 function validatePostalCode(value) {
     return /^[1-9][0-9]{3}[ ]?([A-RT-Za-rt-z][A-Za-z]|[sS][BCbcE-Re-rT-Zt-z])$/.test(value);
+  }
+
+  function validatePhoneNumber(value) {
+    return /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im.test(value);
   }
 
 
