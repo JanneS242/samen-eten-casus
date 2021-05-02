@@ -4,7 +4,7 @@ const studenthomes = require("../studenthome.json");
 exports.searchByHomeId = function(req, res, next) {
     const { homeId } = req.params;
     logger.log(req.params);
-    let hometoreturn = studenthomes.find((home) => home.homeid == homeId);
+    let hometoreturn = studenthomes.find((home) => home.homeId == homeId);
     if(hometoreturn){
         return res.status(200).json(hometoreturn);
     } else{
@@ -46,10 +46,10 @@ exports.searchByNameAndCity = function(req, res) {
 };
 exports.delete = function(req, res) {
     const { homeId} = req.params;
-    let homeToDelete = studenthomes.find((hometofind) => hometofind.homeid == homeId);
+    let homeToDelete = studenthomes.find((hometofind) => hometofind.homeId == homeId);
     if(homeToDelete !== null){
-        logger.log(homeToDelete.homeid);
-        studenthomes = studenthomes.filter((home) => home.homeid !== homeToDelete.homeid);
+        logger.log(homeToDelete.homeId);
+        studenthomes = studenthomes.filter((home) => home.homeId !== homeToDelete.homeId);
         res.status(200).json(homeToDelete);
     }else{
         next({ message: "Home doesn\'t exist", errCode: 404 })
@@ -61,7 +61,7 @@ exports.update = function(req, res) {
     const { homeId } = req.params;
     // let home = studenthomes.find((home) => home.homeid == homeid);
     let home = studenthomes.filter(home => {
-        return home.homeid == homeId;
+        return home.homeId == homeId;
     })[0];
     const index = studenthomes.indexOf(home);
     const body = req.body;
@@ -72,7 +72,7 @@ exports.update = function(req, res) {
         }
     });
     studenthomes[index] = home;
-    studenthomes.find((home) => home.homeid = homeid) = JSON.stringify(body);
+    studenthomes.find((home) => home.homeId = homeId) = JSON.stringify(body);
     res.status(200).send(home).end();
 };
 
@@ -81,7 +81,7 @@ exports.addUsertoStudenhome = function(req, res) {
     var user = req.body;
     let keys = Object.keys(user);
     if(keys[0] == 'userid' && keys.length == 1){
-        let index = studenthomes.findIndex((home) => home.homeid == homeId);
+        let index = studenthomes.findIndex((home) => home.homeId == homeId);
         let homeusers = studenthomes[index]["users"];
         let isdup = false;
         homeusers.forEach(homeuser => {
@@ -101,30 +101,42 @@ exports.addUsertoStudenhome = function(req, res) {
     }
 };
 
-exports.create = function(req, res) {
+exports.create = function(req, res, next) {
     logger.log(maxId);
     var body = req.body;
     if(body){
         var keys = Object.keys(studenthomes[0]);
         logger.log(keys);
-        keys = keys.filter(key => key !== 'homeid');
+        keys = keys.filter(key => key !== 'homeId');
         keys = keys.filter(key => key !== 'users')
         logger.log(keys);
-        keys.forEach(key => {
-            logger.log(key);
-            if(!(body[key])){
-                next({ message: "wrong body format", errCode: 400 })
-            }
-        });
-        body = addToObject(body, "homeid", maxId.toString(), 0);
-        // body["homeid"] = maxId.toString();
+        // keys.forEach(key => {
+        //     logger.log(key);
+        //     if(!(body[key])){
+        //         next({ message: "An element is missing!", errCode: 400 })
+        //         // res.status(400).send("An element is missing!");
+        //     }
+        // });
+        body = addToObject(body, "homeId", maxId.toString(), 0);
+        // body["homeId"] = maxId.toString();
         body["users"] = [];
         maxId = maxId + 1;
+        if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
+            next({ message: "An element is missing!", errCode: 400 })
+        }
+        // const regexPostalCode = `/^[1-9][0-9]{3}[ ]?([A-RT-Za-rt-z][A-Za-z]|[sS][BCbcE-Re-rT-Zt-z])$/`
+        // let postalCodeVar = body["postalcode"];
+        // if(!regexPostalCode.test(postalCodeVar)){
+        //     next({ message: "Postal code is invalid", errCode: 400})
+        // }
+
         studenthomes.push(body);
         logger.log(studenthomes);
-        res.status(201).json(body).end();
-    }else{
-        next({ message: "The method can't succeed", errCode: 400 })
+        // res.status(201).json(body).end();
+    }else {
+    // if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
+        next({ message: "The method did not succeed", errCode: 400 })
+        // res.status(400).send("The method did not succeed")
     }
 };
 
@@ -132,13 +144,20 @@ var maxId = getmaxId();
 function getmaxId(){
     let max = 0;
     studenthomes.forEach(home =>{
-        if(parseInt(home.homeid) > max){
-            max = home.homeid;
+        if(parseInt(home.homeId) > max){
+            max = home.homeId;
         }
     });
     max++;
     return max;
 };
+
+function validatePostalCode(str){
+    const regex = `/^[1-9][0-9]{3}[ ]?([A-RT-Za-rt-z][A-Za-z]|[sS][BCbcE-Re-rT-Zt-z])$/`
+
+}
+
+
 var addToObject = function(obj, key, value, index){
     var temp ={};
     var i = 0;
@@ -154,3 +173,11 @@ var addToObject = function(obj, key, value, index){
     }
     return temp;
 };
+
+function checkProperties(obj) {
+    for (var key in obj) {
+        if (obj[key] !== null && obj[key] != "")
+            return false;
+    }
+    return true;
+}
