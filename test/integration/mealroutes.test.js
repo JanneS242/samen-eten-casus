@@ -151,4 +151,20 @@ describe("Meal", function () {
               });
             });
 
+            describe("findAll", function () {
+                it("TC-303-1 should return list of meals when all goes well", (done) => {
+                  chai
+                    .request(server)
+                    .get("/api/studenthome/1/meal")
+                    .send()
+                    .end((err, res) => {
+                      assert.ifError(err);
+                      res.should.have.status(200);
+                      res.should.be.an("object");
+            
+                      done();
+                    });
+                });
+            
+            });
 });

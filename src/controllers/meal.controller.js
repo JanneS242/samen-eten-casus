@@ -5,7 +5,7 @@ const studenthomes = require("../studenthome.json");
 exports.findAll = function (req, res, next) {
   const { homeId } = req.params;
   logger.log(req.params);
-  let hometoreturn = studenthomes.find((home) => home.homeid == homeId);
+  let hometoreturn = studenthomes.find((home) => home.homeId == homeId);
   if (hometoreturn) {
     return res.status(200).json(hometoreturn.meal);
   } else {
