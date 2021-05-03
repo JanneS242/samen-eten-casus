@@ -23,6 +23,7 @@ testing:
   stage: test
   image: node:latest
   script:
+    - npm i -D mocha
     - npm run test
   only:
     - main
