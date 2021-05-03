@@ -21,7 +21,7 @@ exports.findOne = function (req, res, next) {
   logger.log(req.params);
   const { homeId } = req.params;
   const { mealId } = req.params;
-  const index = studenthomes.findIndex((home) => home.homeid == homeId);
+  const index = studenthomes.findIndex((home) => home.homeId == homeId);
   if (index == -1) {
     next({
       message: "Home doesn't exist",
@@ -33,7 +33,7 @@ exports.findOne = function (req, res, next) {
   );
   if (mealIndex == -1) {
     next({
-      message: "meal doesn't exist",
+      message: "Meal doesn't exist",
       errCode: 404,
     });
   }
