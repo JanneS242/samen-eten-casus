@@ -1,5 +1,6 @@
 var logger = require("tracer").console();
 const studenthomes = require("../studenthome.json");
+const { findOne } = require("./meal.controller");
 
 exports.searchByHomeId = function(req, res, next) {
     const { homeId } = req.params;
@@ -11,7 +12,7 @@ exports.searchByHomeId = function(req, res, next) {
          next({ message: "Home doesn\'t exist", errCode: 404 })
     }
 };
-exports.searchByNameAndCity = function(req, res) {
+exports.searchByNameAndCity = function(req, res, next) {
     logger.log(req.query);
     const { city } = req.query;
     const { name } = req.query;
@@ -22,14 +23,22 @@ exports.searchByNameAndCity = function(req, res) {
     if(city || name){
     if(name) {
         post = studenthomes.filter((post) => post.name.startsWith(name));
-        
+        if(post.length == 0){
+            next({ message: "Name not found", errCode: 404 })
+        }
     }
     logger.log(post);
     if(city){
         if(post != null){
             post2 = post.filter((post2) => post2.city == city);
+            if(post2.length == 0){
+                next({ message: "City not found", errCode: 404 })
+            }
         }else{
             post2 = studenthomes.filter((post2) => post2.city == city);
+            if(post2.length == 0){
+                next({ message: "City not found", errCode: 404 })
+            }
         }
     }
     if(post2 != null){
@@ -44,8 +53,16 @@ exports.searchByNameAndCity = function(req, res) {
         res.status(200).send(studenthomes);
     }
 };
-exports.delete = function(req, res) {
+exports.delete = function(req, res, next) {
     const { homeId} = req.params;
+    for(var i=0;i<studenthomes.length;i++){
+        if(studenthomes[i].homeId==homeId){
+           console.log("The search found in JSON Object");
+           break;
+        } else{
+            next({ message: "Home doesn\'t exist", errCode: 404})
+        }
+     }
     let homeToDelete = studenthomes.find((hometofind) => hometofind.homeId == homeId);
     if(homeToDelete !== null){
         logger.log(homeToDelete.homeId);
@@ -56,24 +73,57 @@ exports.delete = function(req, res) {
     }
 };
 
-exports.update = function(req, res) {
+exports.update = function(req, res, next) {
     logger.log(req.params)
     const { homeId } = req.params;
+    const body = req.body;
+    // if(homeId > maxId){ //Does not work properly
+    //     next({ message: "This studenthome does not exists", errCode: 400})
+    // }
+    for(var i=0;i<studenthomes.length;i++){
+        if(studenthomes[i].homeId==homeId){
+           console.log("The search found in JSON Object");
+           break;
+        } else{
+            next({ message: "This studenthome does not exists", errCode: 400})
+        }
+     }
     // let home = studenthomes.find((home) => home.homeid == homeid);
     let home = studenthomes.filter(home => {
         return home.homeId == homeId;
     })[0];
     const index = studenthomes.indexOf(home);
-    const body = req.body;
-    let keys = Object.keys(body)
-    keys.forEach(key =>  {
-        if(home[key]){
-            home[key] = body[key];
+    if(body){
+        let keys = Object.keys(body)
+        keys.forEach(key =>  {
+            if(home[key]){
+                home[key] = body[key];
+            }
+        });
+        let postalCodeVar = body["postalcode"];
+        let phoneNumberVar = body["phonenumber"];
+        // let streetVar = body["street"];
+        // let numberVar = body["number"];
+
+        if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
+            next({ message: "An element is missing!", errCode: 400 })
+        } else if(!validatePostalCode(postalCodeVar)){
+            next({ message: "Postal code is invalid", errCode: 400})
+        } else if(!validatePhoneNumber(phoneNumberVar)){
+            next({ message: "Phonenumber is invalid", errCode: 400})
+        } else if(checkIfHomeIdAlreadyExists(homeId)){
+            next({ message: "This studenthome does not exists", errCode: 400})
+        } else {
+            studenthomes[index] = home;
+            // studenthomes.find((home) => home.homeId === homeId) = JSON.stringify(body);
+            // res.status(200).send(home).end();
         }
-    });
-    studenthomes[index] = home;
-    studenthomes.find((home) => home.homeId = homeId) = JSON.stringify(body);
-    res.status(200).send(home).end();
+    
+    }else {
+    // if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
+        next({ message: "The method did not succeed", errCode: 400 })
+        // res.status(400).send("The method did not succeed")
+    }  
 };
 
 exports.addUsertoStudenhome = function(req, res) {
@@ -108,7 +158,7 @@ exports.create = function(req, res, next) {
         var keys = Object.keys(studenthomes[0]);
         logger.log(keys);
         keys = keys.filter(key => key !== 'homeId');
-        keys = keys.filter(key => key !== 'users')
+        keys = keys.filter(key => key !== 'users');
         logger.log(keys);
         body = addToObject(body, "homeId", maxId.toString(), 0);
         // body["homeId"] = maxId.toString();
@@ -164,6 +214,11 @@ function validatePhoneNumber(value) {
 
 function checkIfHomeAlreadyExists(street, number){
     var isInArray = studenthomes.find(function(el){ return el.street === street && el.number === number }) !== undefined;
+    return isInArray
+}
+
+function checkIfHomeIdAlreadyExists(id){
+    var isInArray = studenthomes.find(function(el){ return el.homeId === id}) !== undefined;
     return isInArray
 }
 
