@@ -69,11 +69,11 @@ exports.addMealtoStudenthome = function (req, res, next) {
     // } else
     if (
       body["name"] == null ||
-        body["description"] == null ||
-        body["createdon"] == null ||
-        body["offeredon"] == null ||
-        body["price"] == null ||
-        body["allergyinformation"] == null ||
+      body["description"] == null ||
+      body["createdon"] == null ||
+      body["offeredon"] == null ||
+      body["price"] == null ||
+      body["allergyinformation"] == null ||
       body["ingredients"] == null
     ) {
       next({ message: "An element is missing!", errCode: 400 });
@@ -85,77 +85,74 @@ exports.addMealtoStudenthome = function (req, res, next) {
   } else {
     next({ message: "The method did not succeed", errCode: 400 });
   }
-}
+};
 
-  //UC-302 Maaltijd wijzigen
-  exports.updateMeal = function (req, res, next) {
-    const body = req.body;
-    const { homeId } = req.params;
-    const { mealId } = req.params;
-    logger.log("homeId =" + homeId);
-    const homeIndex = studenthomes.findIndex((home) => home.homeId == homeId);
-    if (homeIndex == -1) {
-      next({
-        message: "Home doesn't exist",
-        errCode: 404,
-      });
-    }
-    logger.log("homeIndex =" + homeIndex);
-    const mealIndex = studenthomes[homeIndex].meals.findIndex(
-      (meal) => meal.mealid == mealId
-    );
-    if (mealIndex == -1) {
-      next({
-        message: "Meal doesn't exist",
-        errCode: 404,
-      });
-    }
-    // const keys = Object.keys(body);
-    // keys.forEach((key) => {
-    //   if (!studenthomes[index].meals[mealIndex][key]) {
-    //     next({ message: "wrong body format", errCode: 400 });
-    //   }
-    //   studenthomes.studenthomes[index].meals[mealIndex][key] = body[key];
-    // });
-    if (
-        body["name"] == null ||
-          body["description"] == null ||
-          body["createdon"] == null ||
-          body["offeredon"] == null ||
-          body["price"] == null ||
-          body["allergyinformation"] == null ||
-        body["ingredients"] == null
-      ) {
-        next({ message: "An element is missing!", errCode: 400 });
-      } else {
-        studenthomes[homeIndex].meals[mealIndex] = body;
-        logger.log(studenthomes[homeIndex]["meals"]);
-        res.status(200).json(studenthomes[homeIndex].meals[mealIndex]);
-      }
-  };
-
+//UC-302 Maaltijd wijzigen
+exports.updateMeal = function (req, res, next) {
+  const body = req.body;
+  const { homeId } = req.params;
+  const { mealId } = req.params;
+  logger.log("homeId =" + homeId);
+  const homeIndex = studenthomes.findIndex((home) => home.homeId == homeId);
+  if (homeIndex == -1) {
+    next({
+      message: "Home doesn't exist",
+      errCode: 404,
+    });
+  }
+  logger.log("homeIndex =" + homeIndex);
+  const mealIndex = studenthomes[homeIndex].meals.findIndex(
+    (meal) => meal.mealid == mealId
+  );
+  if (mealIndex == -1) {
+    next({
+      message: "Meal doesn't exist",
+      errCode: 404,
+    });
+  }
+  // const keys = Object.keys(body);
+  // keys.forEach((key) => {
+  //   if (!studenthomes[index].meals[mealIndex][key]) {
+  //     next({ message: "wrong body format", errCode: 400 });
+  //   }
+  //   studenthomes.studenthomes[index].meals[mealIndex][key] = body[key];
+  // });
+  if (
+    body["name"] == null ||
+    body["description"] == null ||
+    body["createdon"] == null ||
+    body["offeredon"] == null ||
+    body["price"] == null ||
+    body["allergyinformation"] == null ||
+    body["ingredients"] == null
+  ) {
+    next({ message: "An element is missing!", errCode: 400 });
+  } else {
+    studenthomes[homeIndex].meals[mealIndex] = body;
+    logger.log(studenthomes[homeIndex]["meals"]);
+    res.status(200).json(studenthomes[homeIndex].meals[mealIndex]);
+  }
+};
 
 //UC-305 Maaltijd verwijderen
 exports.deleteMeal = (req, res, next) => {
   const { homeId } = req.params;
   const { mealId } = req.params;
-  const index = studenthomes.findIndex(
-    (home) => home.homeId == homeId
-  );
+  const index = studenthomes.findIndex((home) => home.homeId == homeId);
   if (index == -1) {
     next({
-        message: "Home doesn't exist",
-        errCode: 404,
-      });
+      message: "Home doesn't exist",
+      errCode: 404,
+    });
   }
   let mealToDelete = studenthomes[index].meals.find(
     (meal) => meal.mealid == mealId
   );
   if (!mealToDelete) {
     next({
-        message: "Meal doesn't exist",
-        errCode: 404,
-      });
+      message: "Meal doesn't exist",
+      errCode: 404,
+    });
   }
   studenthomes.studenthomes[index].meals = studenthomes.studenthomes[
     index
