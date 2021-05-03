@@ -9,7 +9,7 @@ module.exports = function(app) {
     app.get('/api/studenthome/:homeId/meal/:mealId', meals.findOne);
 
     //UC-301 Maaltijd aanmaken
-    app.post('/api/studenthome/:homeId/meal', meals.addMealtoStudenhome);
+    app.post('/api/studenthome/:homeId/meal', meals.addMealtoStudenthome);
 
     //UC-302 Maaltijd wijzigen
     app.put('/api/studenthome/:homeId/meal/:mealId', meals.updateMeal);

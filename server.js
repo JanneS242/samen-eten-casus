@@ -8,12 +8,11 @@ app.use(bodyParser.json());
 
 require("./src/routes/studenthome.routes")(app);
 
-require("./src/routes/error.routes")(app);
-
 require("./src/routes/meal.routes")(app);
 
 require("./src/routes/user.routes")(app);
 
+require("./src/routes/error.routes")(app);
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
