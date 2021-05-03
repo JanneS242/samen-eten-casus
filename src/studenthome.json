@@ -1,0 +1,57 @@
+[
+    {
+        "homeId": 1,
+        "name": "Xior",
+        "street": "Tramsingel",
+        "number": 27,
+        "postalcode": "4814AB",
+        "city": "Breda",
+        "phonenumber": "0683966784",
+        "users" : [
+
+        ],
+        "meals" : [
+            {   "mealid": 1, 
+                "name" : "Cheese sandwich", 
+                "description": "Bread with cheese and additional butter", 
+                "created-on" : "2021-04-26", 
+                "offered-on": "2021-04-26", 
+                "price": "€2", 
+                "allergy-information": "lactose", 
+                "ingredients": ["Bread", "Butter", "Cheese"] },
+
+            {   "mealid": 2,
+                "name" : "Cheese and ham sandwich", 
+                "description": "Bread with cheese and ham and additional butter", 
+                "created-on" : "2021-04-26", 
+                "offered-on": "2021-04-26", 
+                "price": "€3", 
+                "allergy-information": "lactose", 
+                "ingredients": ["Bread", "Butter", "Cheese", "Ham"] }
+        ]
+    },
+    {
+        "homeId": 2,
+        "name": "T63",
+        "street": "Academiesingel",
+        "number": 40,
+        "postalcode": "4811AC",
+        "city": "Breda",
+        "phonenumber": "0647355892",
+        "users" : [
+
+        ]
+    },
+    {
+        "homeId": 3,
+        "name": "Herendispuut Dagobert",
+        "street": "Delpratsingel",
+        "number": 11,
+        "postalcode": "4811AN",
+        "city": "Tilburg",
+        "phonenumber": "0623062750",
+        "users": [
+            
+        ]
+    }
+]
