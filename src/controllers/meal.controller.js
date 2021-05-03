@@ -136,22 +136,26 @@ exports.addMealtoStudenthome = function (req, res, next) {
 
 
 //UC-305 Maaltijd verwijderen
-exports.deleteMeal = (req, res) => {
+exports.deleteMeal = (req, res, next) => {
   const { homeId } = req.params;
   const { mealId } = req.params;
-  const index = studenthomes.studenthomes.findIndex(
-    (home) => home.homeid == homeId
+  const index = studenthomes.findIndex(
+    (home) => home.homeId == homeId
   );
   if (index == -1) {
-    res.status(404).send("HOme not found");
-    return;
+    next({
+        message: "Home doesn't exist",
+        errCode: 404,
+      });
   }
-  let mealToDelete = studenthomes.studenthomes[index].meals.find(
+  let mealToDelete = studenthomes[index].meals.find(
     (meal) => meal.mealid == mealId
   );
   if (!mealToDelete) {
-    res.status(404).send("Meal not found");
-    return;
+    next({
+        message: "Meal doesn't exist",
+        errCode: 404,
+      });
   }
   studenthomes.studenthomes[index].meals = studenthomes.studenthomes[
     index

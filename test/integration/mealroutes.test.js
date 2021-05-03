@@ -188,8 +188,49 @@ describe("Meal", function () {
                         done();
                       });
                   });
-                  
+
                 it("TC-304-2 should return meal when all goes well", (done) => {
+                  chai
+                    .request(server)
+                    .get("/api/studenthome/1/meal")
+                    .send()
+                    .end((err, res) => {
+                      assert.ifError(err);
+                      res.should.have.status(200);
+                      res.should.be.an("object");
+            
+                      done();
+                    });
+                });
+            
+            });
+
+            describe("deleteMeal", function () {
+              //TC-305-1 Verplicht veld ontbreekt -> Niet van toepassing hier? Geen body?
+              //TC-305-2 Niet ingelogd
+              //TC-305-3 Niet de eigenaar van de data  
+
+                it("TC-305-4 should return valid error when meal does not exist", (done) => {
+                    chai
+                      .request(server)
+                      .delete("/api/studenthome/1/meal/30")
+                      .send()
+                      .end((err, res) => {
+                        assert.ifError(err);
+                        res.should.have.status(404);
+                        res.should.be.an("object");
+
+                        res.body.should.be.an("object").that.has.all.keys("message", "error");
+    
+                        let { message, error } = res.body;
+                        message.should.be.a("string").that.equals("Meal doesn't exist");
+                        error.should.be.a("string");
+              
+                        done();
+                      });
+                  });
+                  
+                it("TC-305-5 should return meal when all goes well", (done) => {
                   chai
                     .request(server)
                     .get("/api/studenthome/1/meal")
