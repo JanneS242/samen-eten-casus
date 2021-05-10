@@ -23,8 +23,8 @@ testing:
   stage: test
   image: node:latest
   script:
-    - npm i -D mocha
-    - npm run test
+    - npm run coverage
+    - npm run sonar
   only:
     - main
 
