@@ -1,6 +1,10 @@
 var logger = require("tracer").console();
-const studenthomes = require("../studenthome.json");
-const { findOne } = require("./meal.controller");
+const config = require('../config/config')
+// const assert = require('assert')
+const database = require('../config/database')
+const pool = require('../config/database')
+// const studenthomes = require("../studenthome.json");
+// const { findOne } = require("./meal.controller");
 
 exports.searchByHomeId = function (req, res, next) {
   const { homeId } = req.params;
@@ -162,49 +166,92 @@ exports.update = function (req, res, next) {
 
 exports.create = function (req, res, next) {
   logger.log(maxId);
-  var body = req.body;
-  if (body) {
-    var keys = Object.keys(studenthomes[0]);
-    logger.log(keys);
-    keys = keys.filter((key) => key !== "homeId");
-    keys = keys.filter((key) => key !== "users");
-    logger.log(keys);
-    body = addToObject(body, "homeId", maxId.toString(), 0);
-    // body["homeId"] = maxId.toString();
-    body["users"] = [];
-    maxId = maxId + 1;
+  var studenthome = req.body;
+  let { name, street, number, postalcode, city, phonenumber } = studenthome;
+  if (studenthome) {
 
-    let postalCodeVar = body["postalcode"];
-    let phoneNumberVar = body["phonenumber"];
-    let streetVar = body["street"];
-    let numberVar = body["number"];
+    //!!!
+    const userId = 1;
 
-    if (
-      body["name"] == null ||
-      body["street"] == null ||
-      body["number"] == null ||
-      body["postalcode"] == null ||
-      body["city"] == null ||
-      body["phonenumber"] == null
-    ) {
-      next({ message: "An element is missing!", errCode: 400 });
-    } else if (!validatePostalCode(postalCodeVar)) {
-      next({ message: "Postal code is invalid", errCode: 400 });
-    } else if (!validatePhoneNumber(phoneNumberVar)) {
-      next({ message: "Phonenumber is invalid", errCode: 400 });
-    } else if (checkIfHomeAlreadyExists(streetVar, numberVar)) {
-      next({ message: "This studenthome already exists", errCode: 400 });
-    } else {
-      studenthomes.push(body);
-      logger.log(studenthomes);
-
-      res.status(200).json(body);
-    }
-  } else {
-    // if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
-    next({ message: "The method did not succeed", errCode: 400 });
-    // res.status(400).send("The method did not succeed")
+    let sqlQuery = 'INSERT INTO `studenthome` (`Name`, `Address`, `House_Nr`, `UserID`, `Postal_Code`, `Telephone`, `City`) VALUES (?, ?, ?, ?, ?, ?, ?)' ;
+    pool.getConnection(function (err, connection) {
+      if(err){
+        logger.error('create', error)
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if(connection){
+        connection.query(sqlQuery, [name, street, number, postalcode, city, phonenumber], (error, results, fields) => {
+          connection.release();
+          if(error){
+            logger.error('create', error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if(results){
+            if (
+              body["name"] == null ||
+              body["street"] == null ||
+              body["number"] == null ||
+              body["postalcode"] == null ||
+              body["city"] == null ||
+              body["phonenumber"] == null
+            ) {
+              next({ message: "An element is missing!", errCode: 400 });
+            } else if (!validatePostalCode(postalCodeVar)) {
+              next({ message: "Postal code is invalid", errCode: 400 });
+            } else if (!validatePhoneNumber(phoneNumberVar)) {
+              next({ message: "Phonenumber is invalid", errCode: 400 });
+            } else if (checkIfHomeAlreadyExists(streetVar, numberVar)) {
+              next({ message: "This studenthome already exists", errCode: 400 });
+            } else {       
+              res.status(200).json(studenthome);
+            }
+          }
+        })
+      }
+    })
   }
+
+  //   var keys = Object.keys(studenthomes[0]);
+  //   logger.log(keys);
+  //   keys = keys.filter((key) => key !== "homeId");
+  //   keys = keys.filter((key) => key !== "users");
+  //   logger.log(keys);
+  //   body = addToObject(body, "homeId", maxId.toString(), 0);
+  //   // body["homeId"] = maxId.toString();
+  //   // body["users"] = [];
+  //   maxId = maxId + 1;
+
+  //   let postalCodeVar = body["postalcode"];
+  //   let phoneNumberVar = body["phonenumber"];
+  //   let streetVar = body["street"];
+  //   let numberVar = body["number"];
+
+  //   if (
+  //     body["name"] == null ||
+  //     body["street"] == null ||
+  //     body["number"] == null ||
+  //     body["postalcode"] == null ||
+  //     body["city"] == null ||
+  //     body["phonenumber"] == null
+  //   ) {
+  //     next({ message: "An element is missing!", errCode: 400 });
+  //   } else if (!validatePostalCode(postalCodeVar)) {
+  //     next({ message: "Postal code is invalid", errCode: 400 });
+  //   } else if (!validatePhoneNumber(phoneNumberVar)) {
+  //     next({ message: "Phonenumber is invalid", errCode: 400 });
+  //   } else if (checkIfHomeAlreadyExists(streetVar, numberVar)) {
+  //     next({ message: "This studenthome already exists", errCode: 400 });
+  //   } else {
+  //     studenthomes.push(body);
+  //     logger.log(studenthomes);
+
+  //     res.status(200).json(body);
+  //   }
+  // } else {
+  //   // if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
+  //   next({ message: "The method did not succeed", errCode: 400 });
+  //   // res.status(400).send("The method did not succeed")
+  // }
 };
 
 var maxId = getmaxId();
