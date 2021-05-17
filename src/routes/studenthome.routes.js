@@ -1,20 +1,23 @@
 module.exports = function (app) {
-  var studenthome = require("../../src/controllers/studenthome.controller");
+  const studenthomecontroller = require("../controllers/studenthome.controller");
+  const authcontroller = require("../controllers/authentication.controller")
 
   //Retrieve a single studenthome by homeId
-  app.get("/api/studenthome/:homeId", studenthome.searchByHomeId);
+  app.get("/api/studenthome/:homeId", studenthomecontroller.searchByHomeId);
 
   //Retrieve a single studenthome by name and/or city
-  app.get("/api/studenthome", studenthome.searchByNameAndCity);
+  app.get("/api/studenthome", studenthomecontroller.searchByNameAndCity);
 
   //Create a new studenthome
-  app.post("/api/studenthome", studenthome.create);
+  app.post("/api/studenthome", authcontroller.validateToken, studenthomecontroller.validateStudenthome, studenthomecontroller.create);
 
   //Delete a studenthome
-  app.delete("/api/studenthome/:homeId", studenthome.delete);
+  app.delete("/api/studenthome/:homeId", authcontroller.validateToken , studenthomecontroller.validateHomeID, authcontroller.checkIfAuthorized, studenthomecontroller.delete);
 
   //Update a studenthome
-  app.put("/api/studenthome/:homeId", studenthome.update);
+  app.put("/api/studenthome/:homeId", authcontroller.validateToken , studenthomecontroller.validateHomeID, authcontroller.checkIfAuthorized, studenthomecontroller.validateStudenthome, studenthomecontroller.update);
 
-  // app.put('/api/studenthome/:homeId/user', studenthome.addUsertoStudenthome);
+  //Add an administrator
+  app.put('/api/studenthome/:homeId/user', authcontroller.validateToken, studenthomecontroller.validateUserID, authcontroller.checkIfAuthorized, studenthomecontroller.addAdminstrator);
+
 };

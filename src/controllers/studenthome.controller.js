@@ -1,312 +1,432 @@
 var logger = require("tracer").console();
-const config = require('../config/config')
-// const assert = require('assert')
-const database = require('../config/database')
-const pool = require('../config/database')
-// const studenthomes = require("../studenthome.json");
-// const { findOne } = require("./meal.controller");
+const config = require("../database/config.js");
+const assert = require("assert");
+const database = require("../database/database.js");
+const pool = require("../database/database.js");
 
-exports.searchByHomeId = function (req, res, next) {
-  const { homeId } = req.params;
-  logger.log(req.params);
-  let hometoreturn = studenthomes.find((home) => home.homeId == homeId);
-  if (hometoreturn) {
-    return res.status(200).json(hometoreturn);
-  } else {
-    next({ message: "Home doesn't exist", errCode: 404 });
-  }
-};
-exports.searchByNameAndCity = function (req, res, next) {
-  logger.log(req.query);
-  const { city } = req.query;
-  const { name } = req.query;
-  logger.log(city);
-  logger.log(name);
-  var post;
-  var post2;
-  if (city || name) {
-    if (name) {
-      post = studenthomes.filter((post) => post.name.startsWith(name));
-      if (post.length == 0) {
-        next({ message: "Name not found", errCode: 404 });
-      }
+let controller = {
+  validateStudenthome(req, res, next) {
+    logger.info("validate create studenthome");
+    logger.info(req.body);
+    try {
+      const { name, street, number, postalcode, city, phonenumber } = req.body;
+      assert(typeof name === "string", "name is missing!");
+      assert(typeof street === "string", "street is missing!");
+      assert(typeof number === "number", "number is missing!");
+      assert(typeof postalcode === "string", "postalcode is missing!");
+      assert(typeof city === "string", "city is missing!");
+      assert(typeof phonenumber === "string", "phonenumber is missing!");
+      assert.match(
+        postalcode,
+        /^[1-9][0-9]{3}[ ]?([A-RT-Za-rt-z][A-Za-z]|[sS][BCbcE-Re-rT-Zt-z])$/,
+        "Postal code is invalid"
+      );
+      assert.match(
+        phonenumber,
+        /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im,
+        "Phonenumber is invalid"
+      );
+      next();
+    } catch (err) {
+      logger.trace("Studenthome data is INvalid: ", err);
+      res.status(400).json({
+        message: "Error!",
+        error: err.toString(),
+      });
     }
-    logger.log(post);
-    if (city) {
-      if (post != null) {
-        post2 = post.filter((post2) => post2.city == city);
-        if (post2.length == 0) {
-          next({ message: "City not found", errCode: 404 });
-        }
-      } else {
-        post2 = studenthomes.filter((post2) => post2.city == city);
-        if (post2.length == 0) {
-          next({ message: "City not found", errCode: 404 });
-        }
-      }
-    }
-    if (post2 != null) {
-      res.status(200).send(post2);
-    } else {
-      if (post != null) {
-        res.status(200).send(post);
-      } else {
-        next({ message: "Not Found", errCode: 404 });
-      }
-    }
-  } else {
-    res.status(200).send(studenthomes);
-  }
-};
-exports.delete = function (req, res, next) {
-  const { homeId } = req.params;
-  for (var i = 0; i < studenthomes.length; i++) {
-    if (studenthomes[i].homeId == homeId) {
-      console.log("The search found in JSON Object");
-      break;
-    } else {
-      next({ message: "Home doesn't exist", errCode: 404 });
-    }
-  }
-  let homeToDelete = studenthomes.find(
-    (hometofind) => hometofind.homeId == homeId
-  );
-  if (homeToDelete !== null) {
-    logger.log(homeToDelete.homeId);
-    // studenthomes = studenthomes.filter((home) => home.homeId !== homeToDelete.homeId);
-    res.status(200).json(homeToDelete);
-  } else {
-    next({ message: "Home doesn't exist", errCode: 404 });
-  }
-};
+  },
 
-exports.update = function (req, res, next) {
-  logger.log(req.params);
-  const { homeId } = req.params;
-  const body = req.body;
-  // if(homeId > maxId){ //Does not work properly
-  //     next({ message: "This studenthome does not exists", errCode: 400})
-  // }
-  for (var i = 0; i < studenthomes.length; i++) {
-    if (studenthomes[i].homeId == homeId) {
-      console.log("The search found in JSON Object");
-      break;
-    } else {
-      next({ message: "This studenthome does not exists", errCode: 400 });
-    }
-  }
-  // let home = studenthomes.find((home) => home.homeid == homeid);
-  let home = studenthomes.filter((home) => {
-    return home.homeId == homeId;
-  })[0];
-  const index = studenthomes.indexOf(home);
-  if (body) {
-    let keys = Object.keys(body);
-    keys.forEach((key) => {
-      if (home[key]) {
-        home[key] = body[key];
-      }
-    });
-    let postalCodeVar = body["postalcode"];
-    let phoneNumberVar = body["phonenumber"];
-    // let streetVar = body["street"];
-    // let numberVar = body["number"];
-
-    if (
-      body["name"] == null ||
-      body["street"] == null ||
-      body["number"] == null ||
-      body["postalcode"] == null ||
-      body["city"] == null ||
-      body["phonenumber"] == null
-    ) {
-      next({ message: "An element is missing!", errCode: 400 });
-    } else if (!validatePostalCode(postalCodeVar)) {
-      next({ message: "Postal code is invalid", errCode: 400 });
-    } else if (!validatePhoneNumber(phoneNumberVar)) {
-      next({ message: "Phonenumber is invalid", errCode: 400 });
-    } else if (checkIfHomeIdAlreadyExists(homeId)) {
-      next({ message: "This studenthome does not exists", errCode: 400 });
-    } else {
-      studenthomes[index] = home;
-      // studenthomes.find((home) => home.homeId === homeId) = JSON.stringify(body);
-      // res.status(200).send(home).end();
-    }
-  } else {
-    // if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
-    next({ message: "The method did not succeed", errCode: 400 });
-    // res.status(400).send("The method did not succeed")
-  }
-};
-
-// exports.addUsertoStudenthome = function(req, res) {
-//     const { homeId } = req.params;
-//     var user = req.body;
-//     let keys = Object.keys(user);
-//     if(keys[0] == 'userid' && keys.length == 1){
-//         let index = studenthomes.findIndex((home) => home.homeId == homeId);
-//         let homeusers = studenthomes[index]["users"];
-//         let isdup = false;
-//         homeusers.forEach(homeuser => {
-//             if(homeuser["userid"] == user["userid"]){
-//                 isdup = true;
-//             }
-//         });
-//         if(isdup == true){
-//          next({ message: "user already in home", errCode: 409 })
-//         }else{
-//             studenthomes[index]["users"].push(user);
-//             logger.log(studenthomes[index]["users"]);
-//             res.status(200).send('added new user to home');
-//         }
-//     } else{
-//       next({ message: "wrong body format", errCode: 400 })
-//     }
-// };
-
-exports.create = function (req, res, next) {
-  logger.log(maxId);
-  var studenthome = req.body;
-  let { name, street, number, postalcode, city, phonenumber } = studenthome;
-  if (studenthome) {
+  create(req, res, next) {
+    var studenthome = req.body;
+    let { name, street, number, postalcode, city, phonenumber } = studenthome;
 
     //!!!
-    const userId = 1;
+    const userId = req.userId;
 
-    let sqlQuery = 'INSERT INTO `studenthome` (`Name`, `Address`, `House_Nr`, `UserID`, `Postal_Code`, `Telephone`, `City`) VALUES (?, ?, ?, ?, ?, ?, ?)' ;
+    let sqlQueryStudenthome =
+      "INSERT INTO `studenthome` (`Name`, `Address`, `House_Nr`, `UserID`, `Postal_Code`, `Telephone`, `City`) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+    let sqlQueryAdministrator =
+      "INSERT INTO home_administrators (`UserID`, `StudenthomeID`) VALUES (?, ?)";
     pool.getConnection(function (err, connection) {
-      if(err){
-        logger.error('create', error)
+      if (err) {
+        logger.error("create", err);
         next({ message: "Failed getting connection", errCode: 400 });
       }
-      if(connection){
-        connection.query(sqlQuery, [name, street, number, postalcode, city, phonenumber], (error, results, fields) => {
-          connection.release();
-          if(error){
-            logger.error('create', error);
-            next({ message: "Failed calling query", errCode: 400 });
-          }
-          if(results){
-            if (
-              body["name"] == null ||
-              body["street"] == null ||
-              body["number"] == null ||
-              body["postalcode"] == null ||
-              body["city"] == null ||
-              body["phonenumber"] == null
-            ) {
-              next({ message: "An element is missing!", errCode: 400 });
-            } else if (!validatePostalCode(postalCodeVar)) {
-              next({ message: "Postal code is invalid", errCode: 400 });
-            } else if (!validatePhoneNumber(phoneNumberVar)) {
-              next({ message: "Phonenumber is invalid", errCode: 400 });
-            } else if (checkIfHomeAlreadyExists(streetVar, numberVar)) {
-              next({ message: "This studenthome already exists", errCode: 400 });
-            } else {       
-              res.status(200).json(studenthome);
+      if (connection) {
+        logger.log("create studenthome");
+        connection.query(
+          sqlQueryStudenthome,
+          [name, street, number, userId, postalcode, phonenumber, city],
+          (error, results, fields) => {
+            connection.release();
+            if (error) {
+              logger.error("create", error);
+              next({ message: "Failed calling query", errCode: 400 });
+            }
+            if (results) {
+              logger.log("create administrator");
+              var homeId = results.insertId;
+              connection.query(
+                sqlQueryAdministrator,
+                [userId, homeId],
+                (error, results, fields) => {
+                  // connection.release();
+                  if (error) {
+                    logger.error("create administrator", error);
+                    next({ message: "Failed calling query", errCode: 400 });
+                  }
+                  if (results) {
+                    logger.info("Administrator added!");
+                    let joinQuery = `SELECT * FROM view_studenthome WHERE ID = ${homeId}`;
+                    connection.query(joinQuery, (error, rows, fields) => {
+                      // connection.release();
+                      if (error) {
+                        logger.error("create results", error);
+                        next({ message: "Failed calling query", errCode: 400 });
+                      } else {
+                        if (
+                          rows &&
+                          rows.length === 1
+                        ) {
+                          var studenthomeInfo = {
+                            id: rows[0].ID,
+                            name: rows[0].Name,
+                            street: rows[0].Address,
+                            number: rows[0].House_Nr,
+                            postalcode: rows[0].Postal_Code,
+                            phonenumber: rows[0].Telephone,
+                            city: rows[0].City,
+                            contact: rows[0].Contact,
+                            email: rows[0].Email,
+                            studentnumber: rows[0].Student_Number,
+                          };
+                          res.status(200).json(studenthomeInfo);
+                        } else {
+                          logger.info("INVALID");
+                        }
+                      }
+                    });
+                  }
+                }
+              );
             }
           }
-        })
+        );
       }
-    })
-  }
+    });
+  },
 
-  //   var keys = Object.keys(studenthomes[0]);
-  //   logger.log(keys);
-  //   keys = keys.filter((key) => key !== "homeId");
-  //   keys = keys.filter((key) => key !== "users");
-  //   logger.log(keys);
-  //   body = addToObject(body, "homeId", maxId.toString(), 0);
-  //   // body["homeId"] = maxId.toString();
-  //   // body["users"] = [];
-  //   maxId = maxId + 1;
+  validateHomeID(req, res, next) {
+    const { homeId } = req.params;
 
-  //   let postalCodeVar = body["postalcode"];
-  //   let phoneNumberVar = body["phonenumber"];
-  //   let streetVar = body["street"];
-  //   let numberVar = body["number"];
+    let queryAllHomeId = `SELECT * FROM studenthome WHERE ID = ${homeId}`;
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("create", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(queryAllHomeId, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            logger.error("create", error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if (results) {
+            if (results.length === 0) {
+              next({
+                message: "This studenthome doesn't exists",
+                errCode: 400,
+              });
+            } else {
+              next();
+            }
+          }
+        });
+      }
+    });
+  },
 
-  //   if (
-  //     body["name"] == null ||
-  //     body["street"] == null ||
-  //     body["number"] == null ||
-  //     body["postalcode"] == null ||
-  //     body["city"] == null ||
-  //     body["phonenumber"] == null
-  //   ) {
-  //     next({ message: "An element is missing!", errCode: 400 });
-  //   } else if (!validatePostalCode(postalCodeVar)) {
-  //     next({ message: "Postal code is invalid", errCode: 400 });
-  //   } else if (!validatePhoneNumber(phoneNumberVar)) {
-  //     next({ message: "Phonenumber is invalid", errCode: 400 });
-  //   } else if (checkIfHomeAlreadyExists(streetVar, numberVar)) {
-  //     next({ message: "This studenthome already exists", errCode: 400 });
-  //   } else {
-  //     studenthomes.push(body);
-  //     logger.log(studenthomes);
+  update(req, res, next) {
+    var studenthome = req.body;
+    let { name, street, number, postalcode, city, phonenumber } = studenthome;
+    logger.log(req.params);
+    const { homeId } = req.params;
 
-  //     res.status(200).json(body);
-  //   }
-  // } else {
-  //   // if(body["name"]==null || body["street"]==null || body["number"]==null || body["postalcode"]==null || body["city"]==null || body["phonenumber"]==null){
-  //   next({ message: "The method did not succeed", errCode: 400 });
-  //   // res.status(400).send("The method did not succeed")
-  // }
+    const userId = req.userId;
+
+    let sqlQuery = `UPDATE studenthome SET Name = ?, Address = ?, House_Nr = ?, UserID = ?, Postal_Code = ?, Telephone = ?, City = ? WHERE id = ${homeId}`;
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("update", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(
+          sqlQuery,
+          [name, street, number, userId, postalcode, phonenumber, city],
+          (error, results, fields) => {
+            connection.release();
+            if (error) {
+              logger.error("update", error);
+              next({ message: "Failed calling query", errCode: 400 });
+            }
+            if (results) {
+              let joinQuery = `SELECT * FROM view_studenthome WHERE ID = ${homeId}`;
+              connection.query(joinQuery, (error, rows, fields) => {
+                // connection.release();
+                if (error) {
+                  logger.error("create results", error);
+                  next({ message: "Failed calling query", errCode: 400 });
+                } else {
+                  if (
+                    rows &&
+                    rows.length === 1
+                  ) {
+                    var studenthomeInfo = {
+                      id: rows[0].ID,
+                      name: rows[0].Name,
+                      street: rows[0].Address,
+                      number: rows[0].House_Nr,
+                      postalcode: rows[0].Postal_Code,
+                      phonenumber: rows[0].Telephone,
+                      city: rows[0].City,
+                      contact: rows[0].Contact,
+                      email: rows[0].Email,
+                      studentnumber: rows[0].Student_Number,
+                    };
+                    res.status(200).json(studenthomeInfo);
+                  } else {
+                    logger.info("INVALID");
+                  }
+                }
+              });
+            }
+          }
+        );
+      }
+    });
+  },
+
+  searchByHomeId(req, res, next) {
+    const { homeId } = req.params;
+    logger.log(req.params);
+    let joinQuery = `SELECT * FROM view_studenthome WHERE ID = ${homeId}`;
+
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("searchByHomeId", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(joinQuery, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            logger.error("searchByHomeId", error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if (results) {
+            if (results.length === 0) {
+              next({ message: "Home doesn't exist", errCode: 404 });
+            } else {
+              res.status(200).json({ results });
+            }
+          }
+        });
+      }
+    });
+  },
+
+  searchByNameAndCity(req, res, next) {
+    logger.log(req.query);
+    const { city } = req.query;
+    const { name } = req.query;
+    logger.log(city);
+    logger.log(name);
+    let sqlFullQuery = `SELECT * FROM view_studenthome WHERE Name = '${name}' AND City = '${city}'`;
+    let sqlNameQuery = `SELECT * FROM view_studenthome WHERE Name = '${name}'`;
+    let sqlCityQuery = `SELECT * FROM view_studenthome WHERE City = '${city}'`;
+    if (name && city) {
+      pool.getConnection(function (err, connection) {
+        if (err) {
+          logger.error("searchByNameAndCity FULL", err);
+          next({ message: "Failed getting connection", errCode: 400 });
+        }
+        if (connection) {
+          connection.query(sqlFullQuery, (error, results, fields) => {
+            connection.release();
+            if (error) {
+              logger.error("searchByNameAndCity FULL", error);
+              next({ message: "Failed calling query", errCode: 400 });
+            }
+            if (results) {
+              // if(results.length === 0){
+              //   next({ message: "Studenthome not found", errCode: 404 });
+              // } else{
+              res.status(200).json({ results });
+              // }
+            }
+          });
+        }
+      });
+    } else if (name) {
+      pool.getConnection(function (err, connection) {
+        if (err) {
+          logger.error("searchByNameAndCity NAME", err);
+          next({ message: "Failed getting connection", errCode: 400 });
+        }
+        if (connection) {
+          connection.query(sqlNameQuery, (error, results, fields) => {
+            connection.release();
+            if (error) {
+              logger.error("searchByNameAndCity NAME", error);
+              next({ message: "Failed calling query", errCode: 400 });
+            }
+            if (results) {
+              if (results.length === 0) {
+                next({ message: "Name not found", errCode: 404 });
+              } else {
+                res.status(200).json({ results });
+              }
+            }
+          });
+        }
+      });
+    } else if (city) {
+      pool.getConnection(function (err, connection) {
+        if (err) {
+          logger.error("searchByNameAndCity CITY", err);
+          next({ message: "Failed getting connection", errCode: 400 });
+        }
+        if (connection) {
+          connection.query(sqlCityQuery, (error, results, fields) => {
+            connection.release();
+            if (error) {
+              logger.error("searchByNameAndCity CITY", error);
+              next({ message: "Failed calling query", errCode: 400 });
+            }
+            if (results) {
+              if (results.length === 0) {
+                next({ message: "City not found", errCode: 404 });
+              } else {
+                res.status(200).json({ results });
+              }
+            }
+          });
+        }
+      });
+    } else if(name == null && city == null){
+       res.status(200).json({});
+    }
+  },
+
+  delete(req, res, next) {
+    const { homeId } = req.params;
+    let sqlDeleteQuery = `DELETE FROM studenthome WHERE id = ${homeId}`;
+
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("delete", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(sqlDeleteQuery, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            logger.error("delete", error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if (results) {
+            if (results.affectedRows === 0) {
+              next({ message: "Home doesn't exist", errCode: 404 });
+            } else {
+              res.status(200).json({
+                message: "Deleted!",
+              });
+            }
+          }
+        });
+      }
+    });
+  },
+
+  validateUserID (req, res, next) {
+    const user = req.body;
+    let { UserID } = user;
+    logger.trace("User =", user);
+    let queryAllHomeId = `SELECT * FROM user WHERE ID = ${UserID}`;
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("create", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(queryAllHomeId, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            logger.error("create", error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if (results) {
+            if (results.length === 0) {
+              next({
+                message: "This user doesn't exists",
+                errCode: 400,
+              });
+            } else {
+              next();
+            }
+          }
+        });
+      }
+    });
+  },
+
+  addAdminstrator (req, res) {
+    const { homeId } = req.params;
+    logger.info("addUsertoStudenthome called");
+    const user = req.body;
+    let { UserID } = user;
+    logger.trace("studenthome =", homeId);
+    // !!
+    const userid = req.userId;
+    let sqlQuery = `INSERT INTO home_administrators(UserID, StudenthomeID) VALUES(?,?)`;
+    logger.debug("addUsertoStudenthome", "sqlQuery =", sqlQuery);
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("addUsertoStudenthome", error);
+        res.status(400).json({
+          message: "addUsertoStudenthome failed getting connection!",
+          error: err,
+        });
+      }
+      if (connection) {
+        // Use the connection
+        connection.query(sqlQuery, [UserID, homeId,], (error, results, fields) => {
+          // When done with the connection, release it.
+          connection.release();
+          // Handle error after the release.
+          if (error) {
+            logger.error("addUsertoStudenthome", error.toString());
+            res.status(400).json({
+              message: " addUsertoStudenthome failed calling query",
+              error: error.toString(),
+            });
+          }
+          if (results) {
+            logger.trace("results: ", results);
+            res.status(200).json({
+              result: {
+                userId: UserID,
+                homeId: homeId
+              },
+            });
+          }
+        });
+      }
+    });
+  },
 };
 
-var maxId = getmaxId();
-function getmaxId() {
-  let max = 0;
-  studenthomes.forEach((home) => {
-    if (parseInt(home.homeId) > max) {
-      max = home.homeId;
-    }
-  });
-  max++;
-  return max;
-}
-
-function validatePostalCode(value) {
-  return /^[1-9][0-9]{3}[ ]?([A-RT-Za-rt-z][A-Za-z]|[sS][BCbcE-Re-rT-Zt-z])$/.test(
-    value
-  );
-}
-
-function validatePhoneNumber(value) {
-  return /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im.test(
-    value
-  );
-}
-
-function checkIfHomeAlreadyExists(street, number) {
-  var isInArray =
-    studenthomes.find(function (el) {
-      return el.street === street && el.number === number;
-    }) !== undefined;
-  return isInArray;
-}
-
-function checkIfHomeIdAlreadyExists(id) {
-  var isInArray =
-    studenthomes.find(function (el) {
-      return el.homeId === id;
-    }) !== undefined;
-  return isInArray;
-}
-
-var addToObject = function (obj, key, value, index) {
-  var temp = {};
-  var i = 0;
-  for (var prop in obj) {
-    if (i == index && key && value) {
-      temp[key] = value;
-    }
-    temp[prop] = obj[prop];
-    i++;
-  }
-  if (!index && key && value) {
-    temp[key] = value;
-  }
-  return temp;
-};
-
+module.exports = controller;
