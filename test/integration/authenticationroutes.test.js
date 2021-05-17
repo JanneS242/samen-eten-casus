@@ -8,13 +8,23 @@ const chaiHttp = require("chai-http");
 const server = require("../../server");
 const pool = require("../../src/database/database");
 
+var logger = require("tracer").console();
+
 chai.should();
 chai.use(chaiHttp);
 const assert = require("assert");
 
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+
 const CLEAR_DB = "DELETE IGNORE FROM `user`";
-const INSERT_JAN_SMIT =
-  "INSERT INTO `user` (`First_Name`, `Last_Name`, `Email`, `Student_Number`, `Password`) VALUES('FirstName', 'LastName', 'jsmit@server.nl', 1234567, 'secret')";
+
+var passwordJanSmit;
+var passwordJanneSterk;
+
+const INSERT_JANSMIT = `INSERT INTO user (ID, First_Name, Last_Name, Email, Student_Number, Password) VALUES (1, "Jan", "Smit", "jsmit@server.nl", "1234567", ?)`;
+
+const INSERT_JANNESTERK = `INSERT INTO user (ID, First_Name, Last_Name, Email, Student_Number, Password) VALUES (2, "Janne", "Sterk", "voorbeeld@email.nl", 897653, ?)`;
 
 describe("Authentication", () => {
   before((done) => {
@@ -36,6 +46,7 @@ describe("Authentication", () => {
       }
     });
   });
+
 
   after((done) => {
     // console.log('beforeEach')
@@ -76,6 +87,7 @@ describe("Authentication", () => {
           done();
         });
     });
+
     it("TC-101-2 invalid email adres", (done) => {
       chai
         .request(server)
@@ -93,6 +105,7 @@ describe("Authentication", () => {
           done();
         });
     });
+
     it("TC-101-3 invalid password", (done) => {
       chai
         .request(server)
@@ -110,6 +123,7 @@ describe("Authentication", () => {
           done();
         });
     });
+    
     it("TC-101-5 should return a token when providing valid information", (done) => {
       chai
         .request(server)
@@ -134,18 +148,21 @@ describe("Authentication", () => {
   });
 
   it("TC-101-4 User Exist", (done) => {
-    pool.getConnection(function (err, connection) {
+    bcrypt.genSalt(saltRounds, function (err, salt) {
       if (err) {
-        logger.error("", err);
-        next({ message: "Failed getting connection", errCode: 400 });
-      }
-      if (connection) {
-        connection.query(INSERT_JAN_SMIT, (err, rows, fields) => {
-          if (err) {
-            console.log(`beforeEach JAN SMIT error: ${err}`);
-            done(err);
-          } else {
-            chai
+        throw err;
+      } else {
+        bcrypt.hash("secret", 10, function (err, hash) {
+          if (err) console.log(err);
+          passwordJanSmit = hash;
+          pool.query(INSERT_JANSMIT, [hash], (err, rows, fields) => {
+            if (err) {
+              logger.error(`before INSERT_JANSMIT: ${err}`);
+              done(err);
+            }
+            if (rows) {
+              logger.debug(`before INSERT_JANSMIT done`);
+              chai
               .request(server)
               .post("/api/register")
               .send({
@@ -166,20 +183,44 @@ describe("Authentication", () => {
                   .that.equals("This email has already been taken.");
                 //datetime.should.be.a(Date);
                 done();
-              });
-          }
+              })
+            }
+          })
         });
       }
     });
   });
 
   describe("UC102 Login", () => {
+    before((done) => {
+      bcrypt.genSalt(saltRounds, function (err, salt) {
+        if (err) {
+          throw err;
+        } else {
+          bcrypt.hash("wachtwoord", 10, function (err, hash) {
+            if (err) console.log(err);
+            passwordJanneSterk = hash;
+            pool.query(INSERT_JANNESTERK, [hash], (err, rows, fields) => {
+              if (err) {
+                logger.error(`before INSERT_JANNESTERK: ${err}`);
+                done(err);
+              }
+              if (rows) {
+                logger.debug(`before INSERT_JANNESTERK done`);
+                done();
+              }
+            });
+          });
+        }
+      });
+    });
+
     it("TC-102-1 required field is missing", (done) => {
       chai
         .request(server)
         .post("/api/login")
         .send({
-          password: "secret",
+          password: "wachtwoord",
         })
         .end((err, res) => {
           assert.ifError(err);
@@ -196,8 +237,8 @@ describe("Authentication", () => {
         .request(server)
         .post("/api/login")
         .send({
-          email: "jsmit@server.nll",
-          password: "secret",
+          email: "voorbeeld@email.nllll",
+          password: "wachtwoord",
         })
         .end((err, res) => {
           assert.ifError(err);
@@ -216,7 +257,7 @@ describe("Authentication", () => {
         .request(server)
         .post("/api/login")
         .send({
-          email: "jsmit@server.nll",
+          email: "voorbeeld@email.nl",
           password: "secrett",
         })
         .end((err, res) => {
@@ -266,8 +307,8 @@ describe("Authentication", () => {
         .request(server)
         .post("/api/login")
         .send({
-          email: "jsmit@server.nl",
-          password: "secret",
+          email: "voorbeeld@email.nl",
+          password: "wachtwoord",
         })
         .end((err, res) => {
           res.should.have.status(200);

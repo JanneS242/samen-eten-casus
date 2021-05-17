@@ -10,6 +10,9 @@ const pool = require("../../src/database/database");
 var logger = require("tracer").console();
 const jwt = require("jsonwebtoken");
 
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+
 const assert = require("assert");
 chai.should();
 chai.use(chaiHttp);
@@ -18,14 +21,14 @@ logger.debug(`Running tests using database '${process.env.DB_DATABASE}'`);
 
 const CLEAR_DB = "DELETE IGNORE FROM `user`";
 
-const INSERT_USER =
-  "INSERT INTO `user` (`ID`, `First_Name`, `Last_Name`, `Email`, `Student_Number`, `Password`) VALUES ?";
+var passwordJanneSterk;
+var passwordJanSmit;
 
-const userValues = [
-  [1,'FirstName', 'LastName', 'jsmit@server.nl', 1234567, 'secret'],
-  [2, 'Janne', 'Sterk' , 'voorbeeld@email.nl', 8976352, 'wachtwoord'],
-]
-  
+
+const INSERT_JANSMIT = `INSERT INTO user (ID, First_Name, Last_Name, Email, Student_Number, Password) VALUES (1, "Jan", "Smit", "jsmit@server.nl", "1234567", ?)`;
+
+const INSERT_JANNESTERK = `INSERT INTO user (ID, First_Name, Last_Name, Email, Student_Number, Password) VALUES (2, "Janne", "Sterk", "voorbeeld@email.nl", 897653, ?)`;
+
 /**
  * Query om twee movies toe te voegen. Let op de UserId, die moet matchen
  * met de user die je ook toevoegt.
@@ -61,14 +64,47 @@ describe("Studenthome", function () {
   });
 
   before((done) => {
-    pool.query(INSERT_USER, [userValues], (err, rows, fields) => {
+    bcrypt.genSalt(saltRounds, function (err, salt) {
       if (err) {
-        logger.error(`before INSERT_USER: ${err}`);
-        done(err);
+        throw err;
+      } else {
+        bcrypt.hash("secret", 10, function (err, hash) {
+          if (err) console.log(err);
+          passwordJanSmit = hash;
+          pool.query(INSERT_JANSMIT, [hash], (err, rows, fields) => {
+            if (err) {
+              logger.error(`before INSERT_JANSMIT: ${err}`);
+              done(err);
+            }
+            if (rows) {
+              logger.debug(`before INSERT_JANSMIT done`);
+              done();
+            }
+          });
+        });
       }
-      if (rows) {
-        logger.debug(`before INSERT_USER done`);
-        done();
+    });
+  });
+
+  before((done) => {
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+      if (err) {
+        throw err;
+      } else {
+        bcrypt.hash("wachtwoord", 10, function (err, hash) {
+          if (err) console.log(err);
+          passwordJanneSterk = hash;
+          pool.query(INSERT_JANNESTERK, [hash], (err, rows, fields) => {
+            if (err) {
+              logger.error(`before INSERT_JANNESTERK: ${err}`);
+              done(err);
+            }
+            if (rows) {
+              logger.debug(`before INSERT_JANNESTERK done`);
+              done();
+            }
+          });
+        });
       }
     });
   });
@@ -140,8 +176,6 @@ describe("Studenthome", function () {
         done();
       });
   });
-
-  
 
   describe("create", function () {
     it("TC-201-1 should return valid error when required value is not present", (done) => {
@@ -310,8 +344,7 @@ describe("Studenthome", function () {
       chai
         .request(server)
         .get("/api/studenthome")
-        .query({
-        })
+        .query({})
         .end((err, res) => {
           res.should.have.status(200);
           res.body.should.be.an("object");
@@ -607,7 +640,6 @@ describe("Studenthome", function () {
   });
 
   describe("delete", function () {
-    
     it("TC-205-1 should return valid error when studenthome does not exist", (done) => {
       chai
         .request(server)
@@ -645,7 +677,7 @@ describe("Studenthome", function () {
           done();
         });
     });
-    
+
     it("TC-205-3 should return valid error when actor is not authorized", (done) => {
       chai
         .request(server)
@@ -678,72 +710,67 @@ describe("Studenthome", function () {
           res.should.be.an("object");
           res.body.should.be.an("object").that.has.all.keys("message");
           let { message } = res.body;
-          message.should.be
-            .a("string")
-            .that.equals("Deleted!");
+          message.should.be.a("string").that.equals("Deleted!");
           done();
         });
     });
   });
 
   describe("addAdministrator", function () {
-    
     it("TC-206-1 should return valid error when user does not exist", (done) => {
       chai
-      .request(server)
-      .put("/api/studenthome/1/user")
-      .set("authorization", "Bearer " + loggedInToken)
-      .send({
-        UserID: 20,
-      })
-      .end((err, res) => {
-        assert.ifError(err);
-        assert.ifError(err);
-        res.should.have.status(400);
-        res.should.be.an("object");
+        .request(server)
+        .put("/api/studenthome/1/user")
+        .set("authorization", "Bearer " + loggedInToken)
+        .send({
+          UserID: 20,
+        })
+        .end((err, res) => {
+          assert.ifError(err);
+          assert.ifError(err);
+          res.should.have.status(400);
+          res.should.be.an("object");
 
-        res.body.should.be.an("object").that.has.all.keys("message", "error");
+          res.body.should.be.an("object").that.has.all.keys("message", "error");
 
-        let { message, error } = res.body;
-        message.should.be
-          .a("string")
-          .that.equals("This user doesn't exists");
-        error.should.be.a("string");
+          let { message, error } = res.body;
+          message.should.be.a("string").that.equals("This user doesn't exists");
+          error.should.be.a("string");
 
-        done();
-      });
+          done();
+        });
     });
 
     it("TC-206-2 Not Login", (done) => {
       chai
-      .request(server)
-      .put("/api/studenthome/1/user")
-      .send({
-        UserID: 20,
-      })
-      .end((err, res) => {
-        assert.ifError(err);
-        res.should.have.status(401);
-        res.should.be.an("object");
+        .request(server)
+        .put("/api/studenthome/1/user")
+        .send({
+          UserID: 20,
+        })
+        .end((err, res) => {
+          assert.ifError(err);
+          res.should.have.status(401);
+          res.should.be.an("object");
 
-        res.body.should.be.an("object").that.has.all.keys("error");
+          res.body.should.be.an("object").that.has.all.keys("error");
 
-        let { error } = res.body;
-        error.should.be
-          .a("string")
-          .that.equals("Authorization header missing!");
+          let { error } = res.body;
+          error.should.be
+            .a("string")
+            .that.equals("Authorization header missing!");
 
-        done();
-      });
+          done();
+        });
     });
-    
+
     it("TC-206-3 should return valid error when actor is not authorized", (done) => {
       chai
         .request(server)
         .put("/api/studenthome/3/user")
         .set("authorization", "Bearer " + wrongLoggedInToken)
         .send({
-          UserID: 2
+          UserID: 2,
         })
         .end((err, res) => {
           assert.ifError(err);
@@ -761,22 +788,22 @@ describe("Studenthome", function () {
 
     it("TC-206-4 should return valid user is added as administrator", (done) => {
       chai
-      .request(server)
-      .put("/api/studenthome/1/user")
-      .set("authorization", "Bearer " + loggedInToken)
-      .send({
-        UserID: 2,
-      })
-      .end((err, res) => {
-        assert.ifError(err);
-        res.should.have.status(200);
-        res.body.should.be.an("object").that.has.property("result");
+        .request(server)
+        .put("/api/studenthome/1/user")
+        .set("authorization", "Bearer " + loggedInToken)
+        .send({
+          UserID: 2,
+        })
+        .end((err, res) => {
+          assert.ifError(err);
+          res.should.have.status(200);
+          res.body.should.be.an("object").that.has.property("result");
 
-        let result = res.body.result;
-        result.should.be.an("object");
+          let result = res.body.result;
+          result.should.be.an("object");
 
-        done();
-      });
+          done();
+        });
     });
   });
 });

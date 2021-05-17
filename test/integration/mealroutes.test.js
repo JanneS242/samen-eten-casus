@@ -11,6 +11,9 @@ const server = require("../../server");
 const pool = require("../../src/database/database");
 const assert = require("assert");
 
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+
 var logger = require("tracer").console();
 const jwt = require("jsonwebtoken");
 
@@ -18,13 +21,13 @@ logger.debug(`Running tests using database '${process.env.DB_DATABASE}'`);
 
 const CLEAR_DB = "DELETE IGNORE FROM `user`";
 
-const INSERT_USER =
-  "INSERT INTO `user` (`ID`, `First_Name`, `Last_Name`, `Email`, `Student_Number`, `Password`) VALUES ?";
+var passwordJanneSterk;
+var passwordJanSmit;
 
-const userValues = [
-  [1,'FirstName', 'LastName', 'jsmit@server.nl', 1234567, 'secret'],
-  [2, 'Janne', 'Sterk' , 'voorbeeld@email.nl', 8976352, 'wachtwoord'],
-]
+const INSERT_JANSMIT = `INSERT INTO user (ID, First_Name, Last_Name, Email, Student_Number, Password) VALUES (1, "Jan", "Smit", "jsmit@server.nl", "1234567", ?)`;
+
+const INSERT_JANNESTERK = `INSERT INTO user (ID, First_Name, Last_Name, Email, Student_Number, Password) VALUES (2, "Janne", "Sterk", "voorbeeld@email.nl", 897653, ?)`;
+
 /**
  * Query om twee movies toe te voegen. Let op de UserId, die moet matchen
  * met de user die je ook toevoegt.
@@ -47,109 +50,188 @@ const authValues = [
   [1, 4],
 ];
 
-const INSERT_MEALS = `INSERT INTO meal (ID, Name, Description, Ingredients, Allergies, CreatedOn, OfferedOn, Price, MaxParticipants, UserID, StudenthomeID) VALUES ?`
+const INSERT_MEALS = `INSERT INTO meal (ID, Name, Description, Ingredients, Allergies, CreatedOn, OfferedOn, Price, MaxParticipants, UserID, StudenthomeID) VALUES ?`;
 
 const mealValues = [
-    [1, "Stampot", "Stampot met vlees", "Aardappels, Vlees", "Lactose", new Date(), new Date(),3, 7, 1, 1],
-    [2, "Vleesstoof", "Stoof van vlees", "Vlees", "", new Date(), new Date(), 3, 4, 1, 1],
-    [3, "Kipschotel", "Schotel met kip", "Kip", "",  new Date(), new Date(), 2, 6, 1, 2],
-    [4, "Lasagna", "Lasagna Bolognese", "Vlees, Tomatensaus", "Lactose", new Date(), new Date(), 2.50, 7, 1, 3],
-]
-
-
+  [
+    1,
+    "Stampot",
+    "Stampot met vlees",
+    "Aardappels, Vlees",
+    "Lactose",
+    new Date(),
+    new Date(),
+    3,
+    7,
+    1,
+    1,
+  ],
+  [
+    2,
+    "Vleesstoof",
+    "Stoof van vlees",
+    "Vlees",
+    "",
+    new Date(),
+    new Date(),
+    3,
+    4,
+    1,
+    1,
+  ],
+  [
+    3,
+    "Kipschotel",
+    "Schotel met kip",
+    "Kip",
+    "",
+    new Date(),
+    new Date(),
+    2,
+    6,
+    1,
+    2,
+  ],
+  [
+    4,
+    "Lasagna",
+    "Lasagna Bolognese",
+    "Vlees, Tomatensaus",
+    "Lactose",
+    new Date(),
+    new Date(),
+    2.5,
+    7,
+    1,
+    3,
+  ],
+];
 
 describe("Meal", function () {
-    before((done) => {
-        pool.query(CLEAR_DB, (err, rows, fields) => {
-          if (err) {
-            logger.error(`before CLEARING tables: ${err}`);
-            done(err);
-          } else {
-            done();
-          }
-        });
-      });
-    
-      before((done) => {
-        pool.query(INSERT_USER, [userValues], (err, rows, fields) => {
-          if (err) {
-            logger.error(`before INSERT_USER: ${err}`);
-            done(err);
-          }
-          if (rows) {
-            logger.debug(`before INSERT_USER done`);
-            done();
-          }
-        });
-      });
-    
-      before((done) => {
-        pool.query(INSERT_Studenthome, [values], (err, rows, fields) => {
-          if (err) {
-            logger.error(`before INSERT_Studenthome: ${err}`);
-            done(err);
-          }
-          if (rows) {
-            logger.debug(`before INSERT_Studenthome done`);
-            done();
-          }
-        });
-      });
+  before((done) => {
+    pool.query(CLEAR_DB, (err, rows, fields) => {
+      if (err) {
+        logger.error(`before CLEARING tables: ${err}`);
+        done(err);
+      } else {
+        done();
+      }
+    });
+  });
 
-      before((done) => {
-        pool.query(INSERT_MEALS, [mealValues], (err, rows, fields) => {
-          if (err) {
-            logger.error(`before INSERT_MEALS: ${err}`);
-            done(err);
-          }
-          if (rows) {
-            logger.debug(`before INSERT_MEALS done`);
-            done();
-          }
-        });
-      });
-    
-      before((done) => {
-        pool.query(INSERT_AUTHORIZATION, [authValues], (err, rows, fields) => {
-          if (err) {
-            logger.error(`before INSERT_AUTHORIZATION: ${err}`);
-            done(err);
-          }
-          if (rows) {
-            logger.debug(`before INSERT_AUTHORIZATION done`);
-            done();
-          }
-        });
-      });
-    
-      after((done) => {
-        pool.query(CLEAR_DB, (err, rows, fields) => {
-          if (err) {
-            console.log(`after error: ${err}`);
-            done(err);
-          } else {
-            logger.info("After FINISHED");
-            done();
-          }
-        });
-      });
-    
-      var loggedInToken = "";
-      before((done) => {
-        chai
-          .request(server)
-          .post("/api/login")
-          .send({
-            email: "jsmit@server.nl",
-            password: "secret",
-          })
-          .end((err, response) => {
-            loggedInToken = response.body.token;
-            done();
+  before((done) => {
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+      if (err) {
+        throw err;
+      } else {
+        bcrypt.hash("secret", 10, function (err, hash) {
+          if (err) console.log(err);
+          passwordJanSmit = hash;
+          pool.query(INSERT_JANSMIT, [hash], (err, rows, fields) => {
+            if (err) {
+              logger.error(`before INSERT_JANSMIT: ${err}`);
+              done(err);
+            }
+            if (rows) {
+              logger.debug(`before INSERT_JANSMIT done`);
+              done();
+            }
           });
-      });
+        });
+      }
+    });
+  });
 
-      var wrongLoggedInToken = "";
+  before((done) => {
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+      if (err) {
+        throw err;
+      } else {
+        bcrypt.hash("wachtwoord", 10, function (err, hash) {
+          if (err) console.log(err);
+          passwordJanneSterk = hash;
+          pool.query(INSERT_JANNESTERK, [hash], (err, rows, fields) => {
+            if (err) {
+              logger.error(`before INSERT_JANNESTERK: ${err}`);
+              done(err);
+            }
+            if (rows) {
+              logger.debug(`before INSERT_JANNESTERK done`);
+              done();
+            }
+          });
+        });
+      }
+    });
+  });
+
+  before((done) => {
+    pool.query(INSERT_Studenthome, [values], (err, rows, fields) => {
+      if (err) {
+        logger.error(`before INSERT_Studenthome: ${err}`);
+        done(err);
+      }
+      if (rows) {
+        logger.debug(`before INSERT_Studenthome done`);
+        done();
+      }
+    });
+  });
+
+  before((done) => {
+    pool.query(INSERT_MEALS, [mealValues], (err, rows, fields) => {
+      if (err) {
+        logger.error(`before INSERT_MEALS: ${err}`);
+        done(err);
+      }
+      if (rows) {
+        logger.debug(`before INSERT_MEALS done`);
+        done();
+      }
+    });
+  });
+
+  before((done) => {
+    pool.query(INSERT_AUTHORIZATION, [authValues], (err, rows, fields) => {
+      if (err) {
+        logger.error(`before INSERT_AUTHORIZATION: ${err}`);
+        done(err);
+      }
+      if (rows) {
+        logger.debug(`before INSERT_AUTHORIZATION done`);
+        done();
+      }
+    });
+  });
+
+  after((done) => {
+    pool.query(CLEAR_DB, (err, rows, fields) => {
+      if (err) {
+        console.log(`after error: ${err}`);
+        done(err);
+      } else {
+        logger.info("After FINISHED");
+        done();
+      }
+    });
+  });
+
+  var loggedInToken = "";
+  before((done) => {
+    chai
+      .request(server)
+      .post("/api/login")
+      .send({
+        email: "jsmit@server.nl",
+        password: "secret",
+      })
+      .end((err, response) => {
+        loggedInToken = response.body.token;
+        done();
+      });
+  });
+
+  var wrongLoggedInToken = "";
   before((done) => {
     chai
       .request(server)
@@ -189,19 +271,21 @@ describe("Meal", function () {
 
           let { message, error } = res.body;
           message.should.be.a("string").that.equals("Error!");
-          error.should.be.a("string").that.equals("AssertionError [ERR_ASSERTION]: name is missing!");
+          error.should.be
+            .a("string")
+            .that.equals("AssertionError [ERR_ASSERTION]: name is missing!");
 
           done();
         });
     });
 
     it("TC-301-2 Not logged in", (done) => {
-        chai
-          .request(server)
-          .post("/api/studenthome/1/meal")
-          .send({
-            //Enter a valid studenthome
-            name: "Sandwich with ham",
+      chai
+        .request(server)
+        .post("/api/studenthome/1/meal")
+        .send({
+          //Enter a valid studenthome
+          name: "Sandwich with ham",
           description: "Bread with ham",
           createdon: "2021-05-03",
           offeredon: "2021-05-03",
@@ -209,19 +293,19 @@ describe("Meal", function () {
           allergyinformation: "",
           ingredients: ["Bread, Butter, Ham"],
           maxparticipants: 7,
-          })
-          .end((err, res) => {
-            assert.ifError(err);
-            res.should.have.status(401);
-            res.should.be.an("object");
-            res.body.should.be.an("object").that.has.all.keys("error");
-            let { error } = res.body;
-            error.should.be
-              .a("string")
-              .that.equals("Authorization header missing!");
-            done();
-          });
-      });
+        })
+        .end((err, res) => {
+          assert.ifError(err);
+          res.should.have.status(401);
+          res.should.be.an("object");
+          res.body.should.be.an("object").that.has.all.keys("error");
+          let { error } = res.body;
+          error.should.be
+            .a("string")
+            .that.equals("Authorization header missing!");
+          done();
+        });
+    });
 
     it("TC-301-3 should return body if everything goes well", (done) => {
       chai
@@ -275,19 +359,21 @@ describe("Meal", function () {
 
           let { message, error } = res.body;
           message.should.be.a("string").that.equals("Error!");
-          error.should.be.a("string").that.equals("AssertionError [ERR_ASSERTION]: name is missing!");
+          error.should.be
+            .a("string")
+            .that.equals("AssertionError [ERR_ASSERTION]: name is missing!");
 
           done();
         });
     });
 
     it("TC-302-5 Not logged in", (done) => {
-        chai
-          .request(server)
-          .put("/api/studenthome/1/meal/1")
-          .send({
-            //Enter a valid studenthome
-            name: "Sandwich with ham",
+      chai
+        .request(server)
+        .put("/api/studenthome/1/meal/1")
+        .send({
+          //Enter a valid studenthome
+          name: "Sandwich with ham",
           description: "Bread with ham",
           createdon: "2021-05-03",
           offeredon: "2021-05-03",
@@ -295,19 +381,19 @@ describe("Meal", function () {
           allergyinformation: "",
           ingredients: ["Bread, Butter, Ham"],
           maxparticipants: 7,
-          })
-          .end((err, res) => {
-            assert.ifError(err);
-            res.should.have.status(401);
-            res.should.be.an("object");
-            res.body.should.be.an("object").that.has.all.keys("error");
-            let { error } = res.body;
-            error.should.be
-              .a("string")
-              .that.equals("Authorization header missing!");
-            done();
-          });
-      });
+        })
+        .end((err, res) => {
+          assert.ifError(err);
+          res.should.have.status(401);
+          res.should.be.an("object");
+          res.body.should.be.an("object").that.has.all.keys("error");
+          let { error } = res.body;
+          error.should.be
+            .a("string")
+            .that.equals("Authorization header missing!");
+          done();
+        });
+    });
 
     it("TC-302-3 should return valid error when actor is not authorized", (done) => {
       chai
@@ -366,7 +452,7 @@ describe("Meal", function () {
       .put("/api/studenthome/1/meal/1")
       .set("authorization", "Bearer " + loggedInToken)
       .send({
-        name:"Sandwich",
+        name: "Sandwich",
         description: "Bread with ham",
         createdon: "2021-05-03",
         offeredon: "2021-05-03",
@@ -439,24 +525,23 @@ describe("Meal", function () {
   });
 
   describe("deleteMeal", function () {
-
     it("TC-305-2 Not logged in", (done) => {
-        chai
-          .request(server)
-          .delete("/api/studenthome/1/meal/1")
-          .send()
-          .end((err, res) => {
-            assert.ifError(err);
-            res.should.have.status(401);
-            res.should.be.an("object");
-            res.body.should.be.an("object").that.has.all.keys("error");
-            let { error } = res.body;
-            error.should.be
-              .a("string")
-              .that.equals("Authorization header missing!");
-            done();
-          });
-      });
+      chai
+        .request(server)
+        .delete("/api/studenthome/1/meal/1")
+        .send()
+        .end((err, res) => {
+          assert.ifError(err);
+          res.should.have.status(401);
+          res.should.be.an("object");
+          res.body.should.be.an("object").that.has.all.keys("error");
+          let { error } = res.body;
+          error.should.be
+            .a("string")
+            .that.equals("Authorization header missing!");
+          done();
+        });
+    });
 
     it("TC-305-3 should return valid error when actor is not authorized", (done) => {
       chai
