@@ -1,7 +1,5 @@
 var logger = require("tracer").console();
-const config = require("../database/config.js");
 const assert = require("assert");
-const database = require("../database/database.js");
 const pool = require("../database/database.js");
 
 let controller = {
@@ -19,8 +17,6 @@ let controller = {
       } = req.body;
       assert(typeof name === "string", "name is missing!");
       assert(typeof description === "string", "description is missing!");
-      // assert(typeof createdon === "datetime", "createdon is missing!");
-      // assert(typeof offeredon === "datetime", "offeredon is missing!");
       assert(typeof price === "number", "price is missing!");
       assert(
         typeof allergyinformation === "string",
@@ -81,8 +77,6 @@ let controller = {
     let {
       name,
       description,
-      createdon,
-      offeredon,
       price,
       allergyinformation,
       ingredients,
@@ -108,8 +102,6 @@ let controller = {
             allergyinformation,
             new Date(),
             new Date(),
-            // createdon,
-            // offeredon,
             price,
             userId,
             homeId,
@@ -125,7 +117,6 @@ let controller = {
               var mealId = results.insertId;
               let joinQuery = `SELECT * FROM view_meal WHERE StudenthomeID = ${homeId} AND ID = ${mealId}`;
                     connection.query(joinQuery, (error, rows, fields) => {
-                      // connection.release();
                       if (error) {
                         logger.error("create results", error);
                         next({ message: "Failed calling query", errCode: 400 });
@@ -169,8 +160,6 @@ let controller = {
     let {
       name,
       description,
-      // createdon,
-      // offeredon,
       price,
       allergyinformation,
       ingredients,
@@ -197,8 +186,6 @@ let controller = {
             allergyinformation,
             new Date(),
             new Date(),
-            // createdon,
-            // offeredon,
             price,
             userId,
             maxparticipants,
@@ -214,7 +201,6 @@ let controller = {
             if (results) {
               let joinQuery = `SELECT * FROM view_meal WHERE StudenthomeID = ? AND ID = ?`;
               connection.query(joinQuery, [homeId, mealId], (error, rows, fields) => {
-                // connection.release();
                 if (error) {
                   logger.error("create results", error);
                   next({ message: "Failed calling query", errCode: 400 });

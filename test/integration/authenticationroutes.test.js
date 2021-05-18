@@ -28,7 +28,6 @@ const INSERT_JANNESTERK = `INSERT INTO user (ID, First_Name, Last_Name, Email, S
 
 describe("Authentication", () => {
   before((done) => {
-    // console.log('beforeEach')
     pool.getConnection(function (err, connection) {
       if (err) {
         logger.error("", err);
@@ -47,9 +46,7 @@ describe("Authentication", () => {
     });
   });
 
-
   after((done) => {
-    // console.log('beforeEach')
     pool.getConnection(function (err, connection) {
       if (err) {
         logger.error("", err);
@@ -123,7 +120,7 @@ describe("Authentication", () => {
           done();
         });
     });
-    
+
     it("TC-101-5 should return a token when providing valid information", (done) => {
       chai
         .request(server)
@@ -141,7 +138,6 @@ describe("Authentication", () => {
           res.body.should.be.a("object");
           const response = res.body;
           response.should.have.property("token").which.is.a("string");
-          // response.should.have.property('username').which.is.a('string')
           done();
         });
     });
@@ -163,29 +159,28 @@ describe("Authentication", () => {
             if (rows) {
               logger.debug(`before INSERT_JANSMIT done`);
               chai
-              .request(server)
-              .post("/api/register")
-              .send({
-                firstname: "FirstName",
-                lastname: "LastName",
-                email: "jsmit@server.nl",
-                studentnr: 1234567,
-                password: "secret",
-              })
-              .end((err, res) => {
-                assert.ifError(err);
-                res.should.have.status(400);
-                res.should.be.an("object");
-                res.body.should.be.an("object").that.has.all.keys("message");
-                let { message } = res.body;
-                message.should.be
-                  .a("string")
-                  .that.equals("This email has already been taken.");
-                //datetime.should.be.a(Date);
-                done();
-              })
+                .request(server)
+                .post("/api/register")
+                .send({
+                  firstname: "FirstName",
+                  lastname: "LastName",
+                  email: "jsmit@server.nl",
+                  studentnr: 1234567,
+                  password: "secret",
+                })
+                .end((err, res) => {
+                  assert.ifError(err);
+                  res.should.have.status(400);
+                  res.should.be.an("object");
+                  res.body.should.be.an("object").that.has.all.keys("message");
+                  let { message } = res.body;
+                  message.should.be
+                    .a("string")
+                    .that.equals("This email has already been taken.");
+                  done();
+                });
             }
-          })
+          });
         });
       }
     });
@@ -248,7 +243,6 @@ describe("Authentication", () => {
           message.should.be
             .a("string")
             .that.equals("User not found or password invalid");
-          //datetime.should.be.a(new Date().toISOString());
           done();
         });
     });
@@ -268,14 +262,11 @@ describe("Authentication", () => {
           message.should.be
             .a("string")
             .that.equals("User not found or password invalid");
-          //datetime.should.be.a(new Date().toISOString());
           done();
         });
     });
-    /**
-     * This assumes that a user with given credentials exists. That is the case
-     * when register has been done before login.
-     */
+
+    
     it("TC-102-4 User does not exist", (done) => {
       chai
         .request(server)
@@ -293,15 +284,11 @@ describe("Authentication", () => {
           message.should.be
             .a("string")
             .that.equals("User not found or password invalid");
-          //datetime.should.be.a(new Date().toISOString());
+
           done();
         });
     });
 
-    /**
-     * This assumes that a user with given credentials exists. That is the case
-     * when register has been done before login.
-     */
     it("TC-102-5 should return a token when providing valid information", (done) => {
       chai
         .request(server)
@@ -315,9 +302,48 @@ describe("Authentication", () => {
           res.body.should.be.a("object");
           const response = res.body;
           response.should.have.property("token").which.is.a("string");
-          // response.should.have.property('username').which.is.a('string')
           done();
         });
+    });
+
+    describe("Info", () => {
+      it("TC-103-1 should return owner info", (done) => {
+        chai
+          .request(server)
+          .get("/api/info")
+          .send()
+          .end((err, res) => {
+            assert.ifError(err);
+            res.should.have.status(200);
+            res.body.should.be.a("object");
+
+            done();
+          });
+      });
+
+      describe("Endpoint does not exist", () => {
+        it("TC-104-1 should return error if endpoint does not exist", (done) => {
+          chai
+            .request(server)
+            .get("/info")
+            .send()
+            .end((err, res) => {
+              assert.ifError(err);
+              res.should.have.status(401);
+              res.body.should.be
+                .an("object")
+                .that.has.all.keys("error", "message");
+
+              let { error, message } = res.body;
+              error.should.be.a("string").that.equals("Some error occured");
+              message.should.be
+                .a("string")
+                .that.equals("Endpoint /info does not exists");
+
+              done();
+            });
+        });
+      });
     });
   });
 });

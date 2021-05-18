@@ -1,5 +1,4 @@
 const mysql = require('mysql')
-// const logger = require('./config').logger
 var logger = require("tracer").console();
 const dbconfig = require('./config').dbconfig
 

@@ -29,10 +29,7 @@ const INSERT_JANSMIT = `INSERT INTO user (ID, First_Name, Last_Name, Email, Stud
 
 const INSERT_JANNESTERK = `INSERT INTO user (ID, First_Name, Last_Name, Email, Student_Number, Password) VALUES (2, "Janne", "Sterk", "voorbeeld@email.nl", 897653, ?)`;
 
-/**
- * Query om twee movies toe te voegen. Let op de UserId, die moet matchen
- * met de user die je ook toevoegt.
- */
+
 const INSERT_Studenthome = `INSERT INTO studenthome (ID, Name, Address, House_Nr, UserID, Postal_Code, Telephone, City) VALUES ? `;
 
 const values = [

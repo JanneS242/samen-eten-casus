@@ -1,7 +1,5 @@
 var logger = require("tracer").console();
-const config = require("../database/config.js");
 const assert = require("assert");
-const database = require("../database/database.js");
 const pool = require("../database/database.js");
 
 let controller = {
@@ -40,7 +38,6 @@ let controller = {
     var studenthome = req.body;
     let { name, street, number, postalcode, city, phonenumber } = studenthome;
 
-    //!!!
     const userId = req.userId;
 
     let sqlQueryStudenthome =
@@ -71,7 +68,6 @@ let controller = {
                 sqlQueryAdministrator,
                 [userId, homeId],
                 (error, results, fields) => {
-                  // connection.release();
                   if (error) {
                     logger.error("create administrator", error);
                     next({ message: "Failed calling query", errCode: 400 });
@@ -175,7 +171,6 @@ let controller = {
             if (results) {
               let joinQuery = `SELECT * FROM view_studenthome WHERE ID = ${homeId}`;
               connection.query(joinQuery, (error, rows, fields) => {
-                // connection.release();
                 if (error) {
                   logger.error("create results", error);
                   next({ message: "Failed calling query", errCode: 400 });
@@ -261,11 +256,7 @@ let controller = {
               next({ message: "Failed calling query", errCode: 400 });
             }
             if (results) {
-              // if(results.length === 0){
-              //   next({ message: "Studenthome not found", errCode: 404 });
-              // } else{
               res.status(200).json({ results });
-              // }
             }
           });
         }
