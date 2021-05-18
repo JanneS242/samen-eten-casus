@@ -55,6 +55,7 @@ Testing:
     - npm run coverage # also runs tests, see package.json
   only:
     - main
+    
 Sonar analysis:
   stage: analysis
   image: node:latest
