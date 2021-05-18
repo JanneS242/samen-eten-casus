@@ -5,14 +5,10 @@
 # Secure Variables like $DB_PASSWORD can added by going to your
 # project’s Settings ➔ CI / CD ➔ Variables on the GitLab website.
 #
-# image: node:latest
-
 stages:
   - testing
   - analysis
-  - production
-
-
+  - deployment
 #
 #  We cache our dependencies for faster pipelines
 #  https://docs.gitlab.com/ee/ci/caching/#sharing-caches-across-different-branches
@@ -22,7 +18,6 @@ cache:
   paths:
     - node_modules/
     - coverage/
-
 #
 # Global variables
 #
@@ -30,41 +25,36 @@ variables:
   # Configure mysql environment variables (https://hub.docker.com/_/mysql/)
   MYSQL_DATABASE: GitLab_MySql_database
   MYSQL_ROOT_PASSWORD: some_secret_password
-
-
-  #
+#
 # Testing nodejes backend
 # Our server uses a MySql database, so to run our testcases we also need a database.
 # We do NOT use the online production database, but spawn an independent test-db on Gitlab.
 # To do so, we have to install it into the container where we run our testcases.
 #
-testing:
+Testing:
   stage: testing
   image: node:latest
-  services: 
-  - mysql:5.6
+  services:
+    - mysql:5.6
   variables:
-    NODE_ENV: dev
+    NODE_ENV: development
     DB_USER: root
     DB_DATABASE: ${MYSQL_DATABASE}
     DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     DB_HOST: mysql
-    before_script:
+  before_script:
     # Install the database service into the node:latest image
     - apt-get update && apt-get install -y git curl libmcrypt-dev default-mysql-client
     - mysql --version
     # Create tables and fill our database by inserting your *-data.sql script
-    - mysql --host=mysql --user="${DB_USER}" --password="${DB_PASSWORD}" ${DB_DATABASE} < movies-data.sql
+    - mysql --host=mysql --user="${DB_USER}" --password="${DB_PASSWORD}" ${DB_DATABASE} < studenthome-data.sql
     - mysqlshow --host=mysql --user="${DB_USER}" --password="${DB_PASSWORD}" ${DB_DATABASE}
     # Install the node packages that our server needs.
     - npm install --no-optional
   script:
-    - npm i -D mocha
-    - npm i -D nyc
-    - npm run coverage
+    - npm run coverage # also runs tests, see package.json
   only:
     - main
-
 Sonar analysis:
   stage: analysis
   image: node:latest
@@ -72,15 +62,15 @@ Sonar analysis:
     - npm install --no-optional
   script:
     - npm run sonar
-
-
+  only:
+    - main
 #
 # Deploy to Heroku
 # DPL is a deploy tool made for continuous deployment that’s developed and used
 # by Travis CI, but can also be used with GitLab CI.
 # https://docs.gitlab.com/ee/ci/examples/deployment/#using-dpl-with-docker
 #
-production:
+Deployment:
   type: deploy
   stage: deployment
   image: ruby:latest
@@ -96,4 +86,3 @@ production:
     - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_API_KEY
   only:
     - main
-
