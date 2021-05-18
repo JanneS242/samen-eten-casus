@@ -1,189 +1,348 @@
 var logger = require("tracer").console();
-const studenthomes = require("../studenthome.json");
+const config = require("../database/config.js");
+const assert = require("assert");
+const database = require("../database/database.js");
+const pool = require("../database/database.js");
 
-//UC-303 Lijst van maaltijden opvragen
-exports.findAll = function (req, res, next) {
-  const { homeId } = req.params;
-  logger.log(req.params);
-  let hometoreturn = studenthomes.find((home) => home.homeId == homeId);
-  if (hometoreturn) {
-    return res.status(200).json(hometoreturn.meal);
-  } else {
-    next({
-      message: "Home doesn't exist",
-      errCode: 404,
-    });
-  }
-};
-
-//UC-304 Details van een maaltijd opvragen
-exports.findOne = function (req, res, next) {
-  logger.log(req.params);
-  const { homeId } = req.params;
-  const { mealId } = req.params;
-  const index = studenthomes.findIndex((home) => home.homeId == homeId);
-  if (index == -1) {
-    next({
-      message: "Home doesn't exist",
-      errCode: 404,
-    });
-  }
-  const mealIndex = studenthomes[index].meals.findIndex(
-    (meal) => meal.mealid == mealId
-  );
-  if (mealIndex == -1) {
-    next({
-      message: "Meal doesn't exist",
-      errCode: 404,
-    });
-  }
-  res.status(200).json(studenthomes[index].meals[mealIndex]);
-};
-
-//UC-301 Maaltijd aanmaken
-exports.addMealtoStudenthome = function (req, res, next) {
-  logger.log(req.params);
-  const { homeId } = req.params;
-  var body = req.body;
-  // let keys = Object.keys(body);
-  if (body) {
-    let keys = Object.keys(body);
-    keys = keys.filter((key) => key !== "mealid");
-    let index = studenthomes.findIndex((home) => home.homeId == homeId);
-    let homemeals = studenthomes[index]["meals"];
-    body = addToObject(body, "mealid", maxId.toString(), 0);
-    // let isdup = false;
-    // homemeals.forEach((homemeals) => {
-    //             if (homemeals["userId"] == user["userId"]) {
-    //                 isdup = true;
-    //             }
-    //         });
-
-    // let postalCodeVar = body["postalcode"];
-    // let phoneNumberVar = body["phonenumber"];
-    // let streetVar = body["street"];
-    // let numberVar = body["number"];
-
-    // if (isdup == true) {
-    //     next({ message: "meal already in home", errCode: 409 });
-    // } else
-    if (
-      body["name"] == null ||
-      body["description"] == null ||
-      body["createdon"] == null ||
-      body["offeredon"] == null ||
-      body["price"] == null ||
-      body["allergyinformation"] == null ||
-      body["ingredients"] == null
-    ) {
-      next({ message: "An element is missing!", errCode: 400 });
-    } else {
-      studenthomes[index]["meals"].push(body);
-      logger.log(studenthomes[index]["meals"]);
-      res.status(200).json(body).end();
+let controller = {
+  validateMeal(req, res, next) {
+    logger.info("validate meal");
+    logger.info(req.body);
+    try {
+      const {
+        name,
+        description,
+        price,
+        allergyinformation,
+        ingredients,
+        maxparticipants,
+      } = req.body;
+      assert(typeof name === "string", "name is missing!");
+      assert(typeof description === "string", "description is missing!");
+      // assert(typeof createdon === "datetime", "createdon is missing!");
+      // assert(typeof offeredon === "datetime", "offeredon is missing!");
+      assert(typeof price === "number", "price is missing!");
+      assert(
+        typeof allergyinformation === "string",
+        "allergyinformation is missing!"
+      );
+      assert(typeof ingredients === "object", "ingredients are missing!");
+      assert(
+        typeof maxparticipants === "number",
+        "maxparticipants are missing!"
+      );
+      next();
+    } catch (err) {
+      logger.trace("Meal data is INvalid: ", err);
+      res.status(400).json({
+        message: "Error!",
+        error: err.toString(),
+      });
     }
-  } else {
-    next({ message: "The method did not succeed", errCode: 400 });
-  }
+  },
+
+  validateMealID(req, res, next) {
+    const { homeId } = req.params;
+    const { mealId } = req.params;
+
+    let queryAllMealId = `SELECT * FROM meal WHERE ID = ${mealId} AND StudenthomeID = ${homeId}`;
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("validateMealID", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(queryAllMealId, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            logger.error("validateMealID", error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if (results) {
+            if (results.length === 0) {
+              next({
+                message: "This meal doesn't exists",
+                errCode: 400,
+              });
+            } else {
+              next();
+            }
+          }
+        });
+      }
+    });
+  },
+
+  //UC-301 Maaltijd aanmaken
+  addMealtoStudenthome(req, res, next) {
+    logger.log(req.params);
+    const { homeId } = req.params;
+    var meal = req.body;
+    let {
+      name,
+      description,
+      createdon,
+      offeredon,
+      price,
+      allergyinformation,
+      ingredients,
+      maxparticipants,
+    } = meal;
+
+    const userId = req.userId;
+
+    let sqlQuery =
+      "INSERT INTO `meal` (`Name`, `Description`, `Ingredients`, `Allergies`, `CreatedOn`, `OfferedOn`, `Price`, `UserID`, `StudenthomeID`, `MaxParticipants`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("create", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(
+          sqlQuery,
+          [
+            name,
+            description,
+            ingredients,
+            allergyinformation,
+            new Date(),
+            new Date(),
+            // createdon,
+            // offeredon,
+            price,
+            userId,
+            homeId,
+            maxparticipants,
+          ],
+          (error, results, fields) => {
+            connection.release();
+            if (error) {
+              logger.error("create", error);
+              next({ message: "Failed calling query", errCode: 400 });
+            }
+            if (results) {
+              var mealId = results.insertId;
+              let joinQuery = `SELECT * FROM view_meal WHERE StudenthomeID = ${homeId} AND ID = ${mealId}`;
+                    connection.query(joinQuery, (error, rows, fields) => {
+                      // connection.release();
+                      if (error) {
+                        logger.error("create results", error);
+                        next({ message: "Failed calling query", errCode: 400 });
+                      } else {
+                        if (
+                          rows &&
+                          rows.length === 1 
+                        ) {
+                          var mealInfo = {
+                            homeId: rows[0].StudenthomeID,
+                            homeName: rows[0].StudenhomeName,
+                            mealId: rows[0].ID,
+                            description: rows[0].Description,
+                            ingredients: rows[0].Ingredients,
+                            allergies: rows[0].Allergies,
+                            createdOn: rows[0].CreatedOn,
+                            offeredOn: rows[0].OfferedOn,
+                            maxparticipants: rows[0].MaxParticipants,
+                            contact: rows[0].Contact,
+                            email: rows[0].Email,
+                            studentnumber: rows[0].Student_Number,
+                          };
+                          res.status(200).json(mealInfo);
+                        } else {
+                          logger.info("INVALID");
+                        }
+                      }
+              });
+            }
+          }
+        );
+      }
+    });
+  },
+
+  //UC-302 Maaltijd wijzigen
+  updateMeal(req, res, next) {
+    logger.log(req.params);
+    const { homeId } = req.params;
+    var meal = req.body;
+    let {
+      name,
+      description,
+      // createdon,
+      // offeredon,
+      price,
+      allergyinformation,
+      ingredients,
+      maxparticipants,
+    } = meal;
+
+    const { mealId } = req.params;
+
+    const userId = req.userId;
+
+    let sqlQuery = `UPDATE meal SET Name = ?, Description = ?, Ingredients = ?, Allergies = ?, CreatedOn = ?, OfferedOn = ?, Price = ?, UserID = ?, MaxParticipants = ? WHERE ID = ? AND StudenthomeID = ?`;
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("updateMeal", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(
+          sqlQuery,
+          [
+            name,
+            description,
+            ingredients,
+            allergyinformation,
+            new Date(),
+            new Date(),
+            // createdon,
+            // offeredon,
+            price,
+            userId,
+            maxparticipants,
+            mealId,
+            homeId,
+          ],
+          (error, results, fields) => {
+            connection.release();
+            if (error) {
+              logger.error("updateMeal", error);
+              next({ message: "Failed calling query", errCode: 400 });
+            }
+            if (results) {
+              let joinQuery = `SELECT * FROM view_meal WHERE StudenthomeID = ? AND ID = ?`;
+              connection.query(joinQuery, [homeId, mealId], (error, rows, fields) => {
+                // connection.release();
+                if (error) {
+                  logger.error("create results", error);
+                  next({ message: "Failed calling query", errCode: 400 });
+                } else {
+                  if (
+                    rows &&
+                    rows.length === 1 
+                  ) {
+                    var studenthomeInfo = {
+                      homeId: rows[0].StudenthomeID,
+                            homeName: rows[0].StudenthomeName,
+                            mealId: rows[0].ID,
+                            description: rows[0].Description,
+                            ingredients: rows[0].Ingredients,
+                            allergies: rows[0].Allergies,
+                            createdOn: rows[0].CreatedOn,
+                            offeredOn: rows[0].OfferedOn,
+                            maxparticipants: rows[0].MaxParticipants,
+                            contact: rows[0].Contact,
+                            email: rows[0].Email,
+                            studentnumber: rows[0].Student_Number,
+                    };
+                    res.status(200).json(studenthomeInfo);
+                  } else {
+                    logger.info("INVALID");
+                    next({ message: "Failed calling JOIN query", errCode: 400 });
+                  }
+                }
+              });
+            }
+          }
+        );
+      }
+    });
+  },
+
+  //UC-303 Lijst van maaltijden opvragen
+  findAll(req, res, next) {
+    const { homeId } = req.params;
+    logger.log(req.params);
+    let sqlQuery = `SELECT * FROM meal WHERE StudenthomeID = ${homeId}`;
+
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("findAll", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(sqlQuery, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            logger.error("findAll", error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if (results) {
+            if (results.length === 0) {
+              next({ message: "Meals don't exist", errCode: 404 });
+            } else {
+              res.status(200).json({ results });
+            }
+          }
+        });
+      }
+    });
+  },
+
+  //UC-304 Details van een maaltijd opvragen
+  findOne(req, res, next) {
+    const { homeId } = req.params;
+    const { mealId } = req.params;
+    logger.log(req.params);
+    let sqlQuery = `SELECT * FROM view_meal WHERE StudenthomeID = ${homeId} AND ID = ${mealId}`;
+
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("findAll", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(sqlQuery, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            logger.error("findAll", error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if (results) {
+            if (results.length === 0) {
+              next({ message: "Meals don't exist", errCode: 404 });
+            } else {
+              res.status(200).json({ results });
+            }
+          }
+        });
+      }
+    });
+  },
+
+  //UC-305 Maaltijd verwijderen
+  deleteMeal(req, res, next) {
+    const { homeId } = req.params;
+    const { mealId } = req.params;
+    let sqlDeleteQuery = `DELETE FROM meal WHERE id = ${mealId} AND StudenthomeID = ${homeId}`;
+
+    pool.getConnection(function (err, connection) {
+      if (err) {
+        logger.error("deleteMeal", err);
+        next({ message: "Failed getting connection", errCode: 400 });
+      }
+      if (connection) {
+        connection.query(sqlDeleteQuery, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            logger.error("deleteMeal", error);
+            next({ message: "Failed calling query", errCode: 400 });
+          }
+          if (results) {
+            if (results.affectedRows === 0) {
+              next({ message: "Meal doesn't exist", errCode: 404 });
+            } else {
+              res.status(200).json({
+                message: "Deleted!",
+              });
+            }
+          }
+        });
+      }
+    });
+  },
 };
 
-//UC-302 Maaltijd wijzigen
-exports.updateMeal = function (req, res, next) {
-  const body = req.body;
-  const { homeId } = req.params;
-  const { mealId } = req.params;
-  logger.log("homeId =" + homeId);
-  const homeIndex = studenthomes.findIndex((home) => home.homeId == homeId);
-  if (homeIndex == -1) {
-    next({
-      message: "Home doesn't exist",
-      errCode: 404,
-    });
-  }
-  logger.log("homeIndex =" + homeIndex);
-  const mealIndex = studenthomes[homeIndex].meals.findIndex(
-    (meal) => meal.mealid == mealId
-  );
-  if (mealIndex == -1) {
-    next({
-      message: "Meal doesn't exist",
-      errCode: 404,
-    });
-  }
-  // const keys = Object.keys(body);
-  // keys.forEach((key) => {
-  //   if (!studenthomes[index].meals[mealIndex][key]) {
-  //     next({ message: "wrong body format", errCode: 400 });
-  //   }
-  //   studenthomes.studenthomes[index].meals[mealIndex][key] = body[key];
-  // });
-  if (
-    body["name"] == null ||
-    body["description"] == null ||
-    body["createdon"] == null ||
-    body["offeredon"] == null ||
-    body["price"] == null ||
-    body["allergyinformation"] == null ||
-    body["ingredients"] == null
-  ) {
-    next({ message: "An element is missing!", errCode: 400 });
-  } else {
-    studenthomes[homeIndex].meals[mealIndex] = body;
-    logger.log(studenthomes[homeIndex]["meals"]);
-    res.status(200).json(studenthomes[homeIndex].meals[mealIndex]);
-  }
-};
-
-//UC-305 Maaltijd verwijderen
-exports.deleteMeal = (req, res, next) => {
-  const { homeId } = req.params;
-  const { mealId } = req.params;
-  const index = studenthomes.findIndex((home) => home.homeId == homeId);
-  if (index == -1) {
-    next({
-      message: "Home doesn't exist",
-      errCode: 404,
-    });
-  }
-  let mealToDelete = studenthomes[index].meals.find(
-    (meal) => meal.mealid == mealId
-  );
-  if (!mealToDelete) {
-    next({
-      message: "Meal doesn't exist",
-      errCode: 404,
-    });
-  }
-  studenthomes.studenthomes[index].meals = studenthomes.studenthomes[
-    index
-  ].meals.filter((meal) => meal.mealid != mealId);
-  res.status(200).json(mealToDelete);
-};
-
-var maxId = getmaxId();
-function getmaxId() {
-  let max = 0;
-  studenthomes.forEach((meal) => {
-    if (parseInt(meal.mealid) > max) {
-      max = meal.mealid;
-    }
-  });
-  max++;
-  return max;
-}
-
-var addToObject = function (obj, key, value, index) {
-  var temp = {};
-  var i = 0;
-  for (var prop in obj) {
-    if (i == index && key && value) {
-      temp[key] = value;
-    }
-    temp[prop] = obj[prop];
-    i++;
-  }
-  if (!index && key && value) {
-    temp[key] = value;
-  }
-  return temp;
-};
+module.exports = controller;
