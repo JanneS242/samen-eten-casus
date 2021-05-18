@@ -46,8 +46,8 @@ testing:
   variables:
     NODE_ENV: dev
     DB_USER: root
-    DB_DATABASE: studenthome
-    DB_PASSWORD: secret
+    DB_DATABASE: ${MYSQL_DATABASE}
+    DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     DB_HOST: mysql
     before_script:
     # Install the database service into the node:latest image
