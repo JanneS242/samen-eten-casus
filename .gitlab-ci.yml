@@ -8,9 +8,28 @@
 # image: node:latest
 
 stages:
-  - test
+  - testing
+  - analysis
   - production
 
+
+#
+#  We cache our dependencies for faster pipelines
+#  https://docs.gitlab.com/ee/ci/caching/#sharing-caches-across-different-branches
+#
+cache:
+  key: one-key-to-rule-them-all
+  paths:
+    - node_modules/
+    - coverage/
+
+#
+# Global variables
+#
+variables:
+  # Configure mysql environment variables (https://hub.docker.com/_/mysql/)
+  MYSQL_DATABASE: GitLab_MySql_database
+  MYSQL_ROOT_PASSWORD: some_secret_password
 
 
   #
@@ -20,15 +39,40 @@ stages:
 # To do so, we have to install it into the container where we run our testcases.
 #
 testing:
-  stage: test
+  stage: testing
   image: node:latest
+  services: 
+  - mysql:5.6
+  variables:
+    NODE_ENV: dev
+    DB_USER: root
+    DB_DATABASE: studenthome
+    DB_PASSWORD: secret
+    DB_HOST: mysql
+    before_script:
+    # Install the database service into the node:latest image
+    - apt-get update && apt-get install -y git curl libmcrypt-dev default-mysql-client
+    - mysql --version
+    # Create tables and fill our database by inserting your *-data.sql script
+    - mysql --host=mysql --user="${DB_USER}" --password="${DB_PASSWORD}" ${DB_DATABASE} < movies-data.sql
+    - mysqlshow --host=mysql --user="${DB_USER}" --password="${DB_PASSWORD}" ${DB_DATABASE}
+    # Install the node packages that our server needs.
+    - npm install --no-optional
   script:
     - npm i -D mocha
     - npm i -D nyc
     - npm run coverage
-    - npm run sonar
   only:
     - main
+
+Sonar analysis:
+  stage: analysis
+  image: node:latest
+  before_script:
+    - npm install --no-optional
+  script:
+    - npm run sonar
+
 
 #
 # Deploy to Heroku
@@ -38,7 +82,7 @@ testing:
 #
 production:
   type: deploy
-  stage: production
+  stage: deployment
   image: ruby:latest
   script:
     # Get your key at https://dashboard.heroku.com/account
@@ -52,3 +96,4 @@ production:
     - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_API_KEY
   only:
     - main
+

@@ -374,7 +374,7 @@ module.exports = {
         name: "Janne Sterk",
         studentnumber: "2173624",
         description: "Samen eten is an app to get students connected",
-        sonarqubeURL: "",
+        sonarqubeURL: "https://sonarqube.avans-informatica-breda.nl/dashboard?id=programmeren4-nodejs-jsterk",
       })
       .end();
   },
