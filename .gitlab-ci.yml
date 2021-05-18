@@ -47,7 +47,7 @@ Testing:
     - apt-get update && apt-get install -y git curl libmcrypt-dev default-mysql-client
     - mysql --version
     # Create tables and fill our database by inserting your *-data.sql script
-    - mysql --host=mysql --user="${DB_USER}" --password="${DB_PASSWORD}" ${DB_DATABASE} < studenthome-data.sql
+    - mysql --host=mysql --user="${DB_USER}" --password="${DB_PASSWORD}" ${DB_DATABASE} < studenthomes.sql
     - mysqlshow --host=mysql --user="${DB_USER}" --password="${DB_PASSWORD}" ${DB_DATABASE}
     # Install the node packages that our server needs.
     - npm install --no-optional
