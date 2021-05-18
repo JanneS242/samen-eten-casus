@@ -1,6 +1,8 @@
 var logger = require("tracer").console();
 const assert = require("assert");
+const { param } = require("../../server.js");
 const pool = require("../database/database.js");
+
 
 let controller = {
   validateStudenthome(req, res, next) {
@@ -81,10 +83,7 @@ let controller = {
                         logger.error("create results", error);
                         next({ message: "Failed calling query", errCode: 400 });
                       } else {
-                        if (
-                          rows &&
-                          rows.length === 1
-                        ) {
+                        if (rows && rows.length === 1) {
                           var studenthomeInfo = {
                             id: rows[0].ID,
                             name: rows[0].Name,
@@ -98,8 +97,6 @@ let controller = {
                             studentnumber: rows[0].Student_Number,
                           };
                           res.status(200).json(studenthomeInfo);
-                        } else {
-                          logger.info("INVALID");
                         }
                       }
                     });
@@ -175,10 +172,7 @@ let controller = {
                   logger.error("create results", error);
                   next({ message: "Failed calling query", errCode: 400 });
                 } else {
-                  if (
-                    rows &&
-                    rows.length === 1
-                  ) {
+                  if (rows && rows.length === 1) {
                     var studenthomeInfo = {
                       id: rows[0].ID,
                       name: rows[0].Name,
@@ -307,8 +301,8 @@ let controller = {
           });
         }
       });
-    } else if(name == null && city == null){
-       res.status(200).json({});
+    } else if (name == null && city == null) {
+      res.status(200).json({});
     }
   },
 
@@ -329,20 +323,16 @@ let controller = {
             next({ message: "Failed calling query", errCode: 400 });
           }
           if (results) {
-            if (results.affectedRows === 0) {
-              next({ message: "Home doesn't exist", errCode: 404 });
-            } else {
-              res.status(200).json({
-                message: "Deleted!",
-              });
-            }
+            res.status(200).json({
+              message: "Deleted!",
+            });
           }
         });
       }
     });
   },
 
-  validateUserID (req, res, next) {
+  validateUserID(req, res, next) {
     const user = req.body;
     let { UserID } = user;
     logger.trace("User =", user);
@@ -374,7 +364,7 @@ let controller = {
     });
   },
 
-  addAdminstrator (req, res) {
+  addAdminstrator(req, res) {
     const { homeId } = req.params;
     logger.info("addUsertoStudenthome called");
     const user = req.body;
@@ -394,30 +384,35 @@ let controller = {
       }
       if (connection) {
         // Use the connection
-        connection.query(sqlQuery, [UserID, homeId,], (error, results, fields) => {
-          // When done with the connection, release it.
-          connection.release();
-          // Handle error after the release.
-          if (error) {
-            logger.error("addUsertoStudenthome", error.toString());
-            res.status(400).json({
-              message: " addUsertoStudenthome failed calling query",
-              error: error.toString(),
-            });
+        connection.query(
+          sqlQuery,
+          [UserID, homeId],
+          (error, results, fields) => {
+            // When done with the connection, release it.
+            connection.release();
+            // Handle error after the release.
+            if (error) {
+              logger.error("addUsertoStudenthome", error.toString());
+              res.status(400).json({
+                message: " addUsertoStudenthome failed calling query",
+                error: error.toString(),
+              });
+            }
+            if (results) {
+              logger.trace("results: ", results);
+              res.status(200).json({
+                result: {
+                  userId: UserID,
+                  homeId: homeId,
+                },
+              });
+            }
           }
-          if (results) {
-            logger.trace("results: ", results);
-            res.status(200).json({
-              result: {
-                userId: UserID,
-                homeId: homeId
-              },
-            });
-          }
-        });
+        );
       }
     });
   },
 };
+
 
 module.exports = controller;

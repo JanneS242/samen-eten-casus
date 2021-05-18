@@ -140,8 +140,6 @@ let controller = {
                             studentnumber: rows[0].Student_Number,
                           };
                           res.status(200).json(mealInfo);
-                        } else {
-                          logger.info("INVALID");
                         }
                       }
               });
@@ -224,9 +222,6 @@ let controller = {
                             studentnumber: rows[0].Student_Number,
                     };
                     res.status(200).json(studenthomeInfo);
-                  } else {
-                    logger.info("INVALID");
-                    next({ message: "Failed calling JOIN query", errCode: 400 });
                   }
                 }
               });
@@ -256,11 +251,11 @@ let controller = {
             next({ message: "Failed calling query", errCode: 400 });
           }
           if (results) {
-            if (results.length === 0) {
-              next({ message: "Meals don't exist", errCode: 404 });
-            } else {
+            // if (results.length === 0) {
+            //   next({ message: "Meals don't exist", errCode: 404 });
+            // } else {
               res.status(200).json({ results });
-            }
+            // }
           }
         });
       }
@@ -317,13 +312,13 @@ let controller = {
             next({ message: "Failed calling query", errCode: 400 });
           }
           if (results) {
-            if (results.affectedRows === 0) {
-              next({ message: "Meal doesn't exist", errCode: 404 });
-            } else {
+            // if (results.affectedRows === 0) {
+            //   next({ message: "Meal doesn't exist", errCode: 404 });
+            // } else {
               res.status(200).json({
                 message: "Deleted!",
               });
-            }
+            // }
           }
         });
       }

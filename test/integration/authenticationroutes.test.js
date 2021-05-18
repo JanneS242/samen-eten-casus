@@ -316,6 +316,7 @@ describe("Authentication", () => {
             assert.ifError(err);
             res.should.have.status(200);
             res.body.should.be.a("object");
+            
 
             done();
           });

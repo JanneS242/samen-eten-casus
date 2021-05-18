@@ -437,6 +437,24 @@ describe("Studenthome", function () {
           done();
         });
     });
+
+    it("TC-202-7 should return list with given city and name query", (done) => {
+      chai
+        .request(server)
+        .get("/api/studenthome")
+        .query({
+          name: "Princenhage",
+          city: "Breda",
+        })
+        .end((err, res) => {
+          assert.ifError(err);
+          res.should.have.status(200);
+          res.should.be.an("object");
+          let { results } = res.body;
+          results.should.be.an("array");
+          done();
+        });
+    });
   });
 
   describe("searchByHomeId", function () {
@@ -635,6 +653,7 @@ describe("Studenthome", function () {
         });
     });
   });
+
 
   describe("delete", function () {
     it("TC-205-1 should return valid error when studenthome does not exist", (done) => {

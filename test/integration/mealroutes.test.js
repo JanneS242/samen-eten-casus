@@ -509,10 +509,24 @@ describe("Meal", function () {
         });
     });
 
-    it("TC-304-2 should return meal when all goes well", (done) => {
+    it("TC-304-2 should return meals when all goes well", (done) => {
       chai
         .request(server)
         .get("/api/studenthome/1/meal")
+        .send()
+        .end((err, res) => {
+          assert.ifError(err);
+          res.should.have.status(200);
+          res.should.be.an("object");
+
+          done();
+        });
+    });
+
+    it("TC-304-3 should return meal when all goes well", (done) => {
+      chai
+        .request(server)
+        .get("/api/studenthome/1/meal/1")
         .send()
         .end((err, res) => {
           assert.ifError(err);
