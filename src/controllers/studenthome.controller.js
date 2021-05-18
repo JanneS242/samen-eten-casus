@@ -1,6 +1,5 @@
 var logger = require("tracer").console();
 const assert = require("assert");
-const { param } = require("../../server.js");
 const pool = require("../database/database.js");
 
 

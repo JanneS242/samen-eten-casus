@@ -70,7 +70,7 @@ Sonar analysis:
 # by Travis CI, but can also be used with GitLab CI.
 # https://docs.gitlab.com/ee/ci/examples/deployment/#using-dpl-with-docker
 #
-Deployment:
+deployment:
   type: deploy
   stage: deployment
   image: ruby:latest

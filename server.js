@@ -1,10 +1,6 @@
 var logger = require("tracer").console();
 
 const express = require("express");
-const studenthomeroutes = require('./src/routes/studenthome.routes')
-const mealroutes = require('./src/routes/meal.routes')
-const authroutes = require('./src/routes/authentication.routes')
-const pool = require('./src/database/database')
 
 const app = express();
 
